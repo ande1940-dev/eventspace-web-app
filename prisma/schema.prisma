@@ -37,11 +37,12 @@ model Comment {
   parent             Comment?             @relation("RepliesOnComments", fields: [parentId], references: [id])
   parentId           String?
   children           Comment[]            @relation("RepliesOnComments")
-  tags               User[]               @relation("TagsOnComments")
+  tagged             User[]               @relation("TagsOnComments")
   watchers           User[]               @relation("WatchersOnComments")
   privated           Boolean
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
+  Notification       Notification[]
   TagsOnComments     TagsOnComments[]
   WatchersOnComments WatchersOnComments[]
 }
@@ -50,14 +51,70 @@ model Event {
   id               String             @id @default(uuid())
   name             String
   location         String
-  invitees         User[]             @relation("InviteesOnEvents")
-  hosts            User[]             @relation("HostsOnEvents")
+  date             DateTime
+  invitations      Invitation[]
+  host             User               @relation("HostsOnEvents", fields: [userId], references: [id])
   comments         Comment[]
   privated         Boolean
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
+  userId           String
+  JoinRequest      JoinRequest[]
+  Notification     Notification[]
   HostsOnEvents    HostsOnEvents[]
   InviteesOnEvents InviteesOnEvents[]
+}
+
+model FriendRequest {
+  id           String         @id @default(uuid())
+  receiver     User           @relation("ReceiversOnFriendRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId   String
+  requester    User           @relation("RequestersOnFriendRequests", fields: [requesterId], references: [id], onDelete: Cascade)
+  requesterId  String
+  createdAt    DateTime       @default(now())
+  Notification Notification[]
+}
+
+model JoinRequest {
+  id           String         @id @default(uuid())
+  event        Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId      String
+  host         User           @relation("HostsOnJoinRequests", fields: [hostId], references: [id], onDelete: Cascade)
+  hostId       String
+  requester    User           @relation("RequestersOnJoinRequests", fields: [requesterId], references: [id], onDelete: Cascade)
+  requesterId  String
+  message      String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  Notification Notification[]
+}
+
+model Invitation {
+  id           String         @id @default(uuid())
+  host         User           @relation("HostsOnInvitations", fields: [hostId], references: [id], onDelete: Cascade)
+  hostId       String
+  invitee      User           @relation("InviteesOnInvitations", fields: [inviteeId], references: [id], onDelete: Cascade)
+  inviteeId    String
+  event        Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId      String
+  status       String?
+  Notification Notification[]
+}
+
+model Notification {
+  id              String         @id @default(uuid())
+  receiver        User?          @relation(fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId      String?
+  invitation      Invitation?    @relation(fields: [invitationId], references: [id])
+  joinRequest     JoinRequest?   @relation(fields: [joinRequestId], references: [id])
+  friendRequest   FriendRequest? @relation(fields: [friendRequestId], references: [id])
+  comment         Comment?       @relation(fields: [commentId], references: [id])
+  event           Event?         @relation(fields: [eventId], references: [id])
+  invitationId    String?
+  joinRequestId   String?
+  friendRequestId String?
+  commentId       String?
+  eventId         String?
 }
 
 model Session {
@@ -69,17 +126,26 @@ model Session {
 }
 
 model User {
-  id                 String               @id @default(uuid())
-  name               String?
-  email              String?              @unique
-  emailVerified      DateTime?
-  image              String?
-  accounts           Account[]
-  createdComments    Comment[]
-  taggedComments     Comment[]            @relation("TagsOnComments")
-  watchedComments    Comment[]            @relation("WatchersOnComments")
-  hostedEvents       Event[]              @relation("HostsOnEvents")
-  invitedEvents      Event[]              @relation("InviteesOnEvents")
+  id              String    @id @default(uuid())
+  name            String?
+  email           String?   @unique
+  emailVerified   DateTime?
+  image           String?
+  accounts        Account[]
+  createdComments Comment[]
+  taggedComments  Comment[] @relation("TagsOnComments")
+  watchedComments Comment[] @relation("WatchersOnComments")
+  hostedEvents    Event[]   @relation("HostsOnEvents")
+
+  receivedFriendRequests FriendRequest[] @relation("ReceiversOnFriendRequests")
+  sentFriendRequests     FriendRequest[] @relation("RequestersOnFriendRequests")
+  receivedJoinRequests   JoinRequest[]   @relation("HostsOnJoinRequests")
+  sentJoinRequests       JoinRequest[]   @relation("RequestersOnJoinRequests")
+
+  receivedInvitations Invitation[]   @relation("InviteesOnInvitations")
+  sentInvitations     Invitation[]   @relation("HostsOnInvitations")
+  notifications       Notification[]
+
   sessions           Session[]
   privated           Boolean
   HostsOnEvents      HostsOnEvents[]

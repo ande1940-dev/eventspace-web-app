@@ -42,6 +42,8 @@ Flow Diagram
            => Action: Comment (If Invitee Or Host)
            => Action: Click Participants (If Invitee Or Host) => Participants
 
+Landing Actions 
+Users Can Log In 
 Home Actions
 Users Can Host Events
 Users Can Make An Event Private (Only Invitees Can See) 
