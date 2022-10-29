@@ -8,6 +8,14 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "../../../server/db/client";
 import { env } from "../../../env/server.mjs";
 
+const GOOGLE_AUTHORIZATION_URL =
+  "https://accounts.google.com/o/oauth2/v2/auth?" +
+  new URLSearchParams({
+    prompt: "consent",
+    access_type: "offline",
+    response_type: "code",
+})
+
 export const authOptions: NextAuthOptions = {
   // Include user.id on session
   callbacks: {
@@ -29,6 +37,7 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
+      authorization: GOOGLE_AUTHORIZATION_URL
     })
   ],
 };

@@ -9,4 +9,11 @@ declare module "next-auth" {
       id: string;
     } & DefaultSession["user"];
   }
+
+  export type SessionUser = {
+    id: string 
+    name: string | null | undefined
+    email: string | null | undefined
+    image: string | null | undefined
+  }
 }
