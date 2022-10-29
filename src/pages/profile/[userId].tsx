@@ -1,4 +1,3 @@
-import { User } from "@prisma/client";
 import { NextPage } from "next";
 import { GetServerSideProps } from 'next';
 import { SessionUser } from "next-auth";
@@ -9,31 +8,41 @@ import Header from "../../components/Header";
 import Image from "next/image";
 
 const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
-    const { data: user } = trpc.user.getUserById.useQuery(userId)
-    const image = user?.image
+    const { data: user } = trpc.user.getProfileById.useQuery(userId)
+    const createFriendRequestMutation = trpc
     return (
         <>
-            <Header sessionUser={sessionUser}/>
-            <main className="grid items-center justify-center">
-                <div>
-                    {image !== null && image !== undefined && 
-                        <Image
-                            src={image}
-                            width={40}
-                            height={40}
-                            quality={90}
-                            className="rounded-full"
-                        />
-                    }
-                </div>
-                <div className="flex">
-                    <button>Add Friend</button>
-                    <button>Block</button>
-                </div>
-            </main>
         </>
-    )
+    )   
 }
+
+// const { data: user } = trpc.user.getProfileById.useQuery(userId)}
+//     if (userId !== null) {
+//         trpc.friendRequest.createFriendRequest({recipientId: userId, recipientName: user.name})
+//         const image = user?.image
+//         return (
+//             <>
+//                 <Header sessionUser={sessionUser}/>
+//                 <main className="grid items-center justify-center">
+//                     <div>
+//                         {image !== null && image !== undefined && 
+//                             <Image
+//                                 src={image}
+//                                 width={40}
+//                                 height={40}
+//                                 quality={90}
+//                                 className="rounded-full"
+//                             />
+//                         }
+//                     </div>
+//                     <div className="flex">
+//                         <button>Add Friend</button>
+//                         <button>Block</button>
+//                     </div>
+//                 </main>
+//             </>
+//         )
+//     }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
     const session = await getServerAuthSession(context);

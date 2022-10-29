@@ -28,6 +28,18 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
+model FriendRequest {
+  id            String   @id @default(uuid())
+  recipient     User     @relation("RecipientsOnFriendRequests", fields: [recipientId], references: [id], onDelete: Cascade)
+  recipientId   String
+  recipientName String
+  sender        User     @relation("SendersOnFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId      String
+  senderName    String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 model Session {
   id           String   @id @default(uuid())
   sessionToken String   @unique
@@ -37,15 +49,19 @@ model Session {
 }
 
 model User {
-  id              String    @id @default(uuid())
-  name            String?
-  email           String?   @unique
-  emailVerified   DateTime?
-  image           String?
-  accounts        Account[]
-  sessions        Session[]
-  friends         User[]    @relation("Friends")
-  friendsRelation User[]    @relation("Friends")
+  id                     String          @id @default(uuid())
+  name                   String?
+  email                  String?         @unique
+  emailVerified          DateTime?
+  image                  String?
+  accounts               Account[]
+  sessions               Session[]
+  friends                User[]          @relation("Friends")
+  friendsRelation        User[]          @relation("Friends")
+  blocked                User[]          @relation("Blocked")
+  blockedRelation        User[]          @relation("Blocked")
+  receivedFriendRequests FriendRequest[] @relation("RecipientsOnFriendRequests")
+  sentFriendRequests     FriendRequest[] @relation("SendersOnFriendRequests")
 }
 
 model VerificationToken {

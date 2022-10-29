@@ -5,16 +5,41 @@ import Link from "next/link";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import Header from "../components/Header";
 import { trpc } from "../utils/trpc";
+import { FriendRequest } from "@prisma/client";
 
 const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
-    const { data: user } = trpc.user.getUserById.useQuery(sessionUser.id)
+    const { data: user } = trpc.user.getDashboardById.useQuery(sessionUser.id)
+
+    const sentFriendRequests = user?.sentFriendRequests
+    const receivedFriendRequests = user?.receivedFriendRequests 
+
     return (
         <>
             <Header sessionUser={sessionUser}/> 
             <nav>
                 <Link href="/explore">Explore</Link>
             </nav>
-            <main>
+            <main> 
+                {
+                    receivedFriendRequests !== undefined && 
+                    <div>
+                        {
+                            receivedFriendRequests.map((request: FriendRequest, index: number) => (
+                                <div key={index}>{`You sent a friend request to ${request.senderName}`}</div>    
+                            ))
+                        }
+                    </div>
+                }
+                {
+                    sentFriendRequests !== undefined && 
+                    <div>
+                        {
+                            sentFriendRequests.map((request: FriendRequest, index: number) => (
+                                <div key={index}>{`You sent a friend request to ${request.recipientName}`}</div>    
+                            ))
+                        }
+                    </div>
+                }
             </main>
             <footer></footer>
         </>
