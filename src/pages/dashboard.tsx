@@ -1,27 +1,19 @@
 import { NextPage } from "next";
-import { SessionUser } from "next-auth";
 import { GetServerSideProps } from 'next';
-import Image from "next/image";
+import { SessionUser } from "next-auth";
 import Link from "next/link";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
+import Header from "../components/Header";
 
 const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
-    const image = sessionUser.image
     return (
         <>
-            <header className="flex p-5 justify-end">
-                {image !== null && image !== undefined && 
-                    <Image
-                        src={image}
-                        width={35}
-                        height={35}
-                        quality={90}
-
-                        className="rounded-full"
-                    /> 
-                }
-            </header>
-            <main></main>
+            <Header sessionUser={sessionUser}/> 
+            <nav>
+                <Link href="/explore">Explore</Link>
+            </nav>
+            <main>
+            </main>
             <footer></footer>
         </>
     )
@@ -33,7 +25,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     if (sessionUser === null) {
       return {
-        notFound: true
+        redirect: {
+            permanent: false,
+            destination: "/signin"
+        }
       }
     }
   
@@ -42,7 +37,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           sessionUser
         }
     }    
-  }
+}
 
 interface IDashboardProps {
     sessionUser: SessionUser
