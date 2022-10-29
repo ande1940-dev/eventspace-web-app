@@ -11,19 +11,21 @@ const Header = ({ sessionUser }: IHeaderProps) => {
         return (
             <header className="flex p-5 justify-end">
                 <div>
-                    {image !== null && image !== undefined && 
-                        <Link href={`/dashboard`}>
-                            <a>
-                                <Image
-                                    src={image}
-                                    width={35}
-                                    height={35}
-                                    quality={90}
-                                    className="rounded-full"
-                                />  
-                            </a>
-                        </Link>
-                    }
+                    <div>
+                        {image !== null && image !== undefined && 
+                            <Link href={`/dashboard`}>
+                                <a>
+                                    <Image
+                                        src={image}
+                                        width={35}
+                                        height={35}
+                                        quality={90}
+                                        className="rounded-full"
+                                    />  
+                                </a>
+                            </Link>
+                        }
+                    </div>
                     {
                         name !== null && name !== undefined && 
                         <p>{name}</p>

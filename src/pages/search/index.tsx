@@ -8,6 +8,7 @@ import { trpc } from "../../utils/trpc";
 
 import Header from "../../components/Header";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 const SearchResult: NextPage<ISearchProps> = ({ sessionUser }) => {
     const { data: users } = trpc.user.getAllUsers.useQuery()
@@ -22,7 +23,6 @@ const SearchResult: NextPage<ISearchProps> = ({ sessionUser }) => {
     }, [])
 
     if (query !== null) {
-        console.log("Query", query)
         const filteredUsers = users?.filter((user: User) => 
             user.name !== null && user.name.toLowerCase().indexOf(query.toLowerCase()) >= 0
         )
@@ -31,7 +31,7 @@ const SearchResult: NextPage<ISearchProps> = ({ sessionUser }) => {
                 <Header sessionUser={sessionUser}/>
                 {
                     filteredUsers?.map((user: User, index: number) => (
-                        <p key={index}>{user.name}</p>
+                        <Link href={`/profile/${user.id}`} key={index}><a>{user.name}</a></Link>
                     ))
                 }
             </>
@@ -42,7 +42,7 @@ const SearchResult: NextPage<ISearchProps> = ({ sessionUser }) => {
             <Header sessionUser={sessionUser}/>
             {
                 users?.map((user: User, index: number) => (
-                    <p key={index}>{user.name}</p>
+                    <Link href={`/profile/${user.id}`} key={index}><a>{user.name}</a></Link>
                 ))
             }
             </>

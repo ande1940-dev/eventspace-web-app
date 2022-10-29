@@ -11,6 +11,13 @@ export const userRouter = router({
             }
         });
     }),
+    getUserById: publicProcedure
+    .input(z.string().uuid())
+    .query(({ctx, input}) => {
+        return ctx.prisma.user.findUnique({where: {
+            id: input 
+        }})
+    }),
     getSecretMessage: protectedProcedure.query(() => {
         return "You are logged in and can see this secret message!";
     }),

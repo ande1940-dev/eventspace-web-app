@@ -4,8 +4,10 @@ import { SessionUser } from "next-auth";
 import Link from "next/link";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import Header from "../components/Header";
+import { trpc } from "../utils/trpc";
 
 const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
+    const { data: user } = trpc.user.getUserById.useQuery(sessionUser.id)
     return (
         <>
             <Header sessionUser={sessionUser}/> 

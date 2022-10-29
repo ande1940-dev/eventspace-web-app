@@ -3,14 +3,12 @@
 
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 
 model Account {
   id                String  @id @default(uuid())
@@ -45,7 +43,9 @@ model User {
   emailVerified   DateTime?
   image           String?
   accounts        Account[]
-  sessions           Session[]
+  sessions        Session[]
+  friends         User[]    @relation("Friends")
+  friendsRelation User[]    @relation("Friends")
 }
 
 model VerificationToken {
