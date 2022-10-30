@@ -12,7 +12,7 @@ export const friendRequestRouter = router({
                 data: {
                     recipient: {
                         connect: {
-                           id: input.recipientName
+                           id: input.recipientId
                         }
                     }, 
                     recipientName: input.recipientName,

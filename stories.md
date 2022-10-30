@@ -42,6 +42,13 @@ Flow Diagram
            => Action: Comment (If Invitee Or Host)
            => Action: Click Participants (If Invitee Or Host) => Participants
 
+Header Actions 
+        view notifications dropdown 
+        view account settings 
+                log outu 
+                settings & privacy 
+                        view blocked users 
+                        change privacy 
 Landing Actions 
 Users Can Log In 
 Home Actions

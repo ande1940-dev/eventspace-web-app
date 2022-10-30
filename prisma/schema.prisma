@@ -43,6 +43,7 @@ model FriendRequest {
 
 model Notification {
   id              String         @id @default(uuid())
+  message         String
   recipient       User           @relation(fields: [recipientId], references: [id], onDelete: Cascade)
   recipientId     String
   friendRequest   FriendRequest? @relation(fields: [friendRequestId], references: [id], onDelete: Cascade)

@@ -10,7 +10,7 @@ import Header from "../../components/Header";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const SearchResult: NextPage<ISearchProps> = ({ sessionUser }) => {
+const SearchResultPage: NextPage<ISearchProps> = ({ sessionUser }) => {
     const { data: users } = trpc.user.getAllUsers.useQuery()
     const router = useRouter()
     const [query, setQuery] = useState<string | null>(null)
@@ -65,4 +65,4 @@ interface ISearchProps {
     sessionUser: SessionUser 
 }
 
-export default SearchResult;
+export default SearchResultPage;
