@@ -1,17 +1,20 @@
 import { NextPage } from "next";
 import { GetServerSideProps } from 'next';
 import { SessionUser } from "next-auth";
+import Image from "next/image";
 import Link from "next/link";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import Header from "../components/Header";
 import { trpc } from "../utils/trpc";
-import { FriendRequest } from "@prisma/client";
+import { FriendRequest, User } from "@prisma/client";
 
 const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
-    const { data: user } = trpc.user.getDashboardById.useQuery(sessionUser.id)
+    const { data: user } = trpc.user.getUserById.useQuery(sessionUser.id)
 
     const sentFriendRequests = user?.sentFriendRequests
     const receivedFriendRequests = user?.receivedFriendRequests 
+    const blockedList = user?.blockedList
+    //const notifications = user?.notifications
 
     return (
         <>
@@ -25,7 +28,7 @@ const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
                     <div>
                         {
                             receivedFriendRequests.map((request: FriendRequest, index: number) => (
-                                <div key={index}>{`You sent a friend request to ${request.senderName}`}</div>    
+                                <div key={index}>{`You sent a friend request to ${request.recipientName}`}</div>    
                             ))
                         }
                     </div>
@@ -36,6 +39,34 @@ const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
                         {
                             sentFriendRequests.map((request: FriendRequest, index: number) => (
                                 <div key={index}>{`You sent a friend request to ${request.recipientName}`}</div>    
+                            ))
+                        }
+                    </div>
+                }
+                {
+                    blockedList !== undefined && 
+                    <div>
+                        {
+                            
+                            blockedList.map((user: User, index: number) => (
+                                <div key={index}>
+                                    <div>
+                                        {user.image !== null && user.image !== undefined && 
+                                            <Image
+                                                src={user.image}
+                                                width={40}
+                                                height={40}
+                                                quality={90}
+                                                className="rounded-full"
+                                            />
+                                        }
+                                    </div>
+                                    {user.name !== null && 
+                                        <p>{user.name}</p>
+                                    }
+                                </div>
+                                 
+                                 
                             ))
                         }
                     </div>

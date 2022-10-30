@@ -2,6 +2,23 @@ import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { z } from "zod";
 
 export const userRouter = router({
+    blockUser: protectedProcedure
+    .input(z.object({ blockedUserId: z.string().uuid(), blockedUserName: z.string()}))
+    .mutation(({ctx, input}) => {
+        const sessionUserId = ctx.session.user.id
+        ctx.prisma.user.update({
+            where: {
+                id: sessionUserId
+            }, 
+            data: {
+                blocked: {
+                    connect: {
+                        id: input.blockedUserId
+                    }
+                }
+            }
+        })
+    }), 
     getAllUsers: publicProcedure.query(({ ctx }) => {
         return ctx.prisma.user.findMany({
             where: {
@@ -11,18 +28,9 @@ export const userRouter = router({
             }
         });
     }),
-    getProfileById: publicProcedure
+    getUserById: protectedProcedure
     .input(z.string().uuid())
     .query(({ctx, input}) => {
-        return ctx.prisma.user.findUnique({
-            where: {
-                id: input 
-            }
-        })
-    }),
-    getDashboardById: protectedProcedure
-    .input(z.string().uuid())
-    .mutation(({ctx, input}) => {
         return ctx.prisma.user.findUnique({
             where: {
                 id: input
@@ -30,7 +38,8 @@ export const userRouter = router({
             include: {
                 friends: true,
                 sentFriendRequests: true,
-                receivedFriendRequests: true
+                receivedFriendRequests: true,
+                blockedList: true
             }
         })
     }), 

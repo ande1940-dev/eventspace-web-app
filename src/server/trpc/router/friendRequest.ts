@@ -3,12 +3,12 @@ import { z } from "zod";
 
 export const friendRequestRouter = router({
    createFriendRequest: protectedProcedure
-   .input(z.object({recipientName: z.string(), recipientId: z.string().uuid()}))
-   .query(({ctx, input}) => {
+   .input(z.object({recipientId: z.string().uuid(), recipientName: z.string()}))
+   .mutation(async ({ctx, input}) => {
         const sessionUserId = ctx.session.user.id
         const sessionUserName = ctx.session.user.name
         if (sessionUserName !== null && sessionUserName !== undefined) {
-            ctx.prisma.friendRequest.create({
+            const friendRequest = await ctx.prisma.friendRequest.create({
                 data: {
                     recipient: {
                         connect: {
@@ -24,6 +24,7 @@ export const friendRequestRouter = router({
                     senderName: sessionUserName
                 }
             })
+            return friendRequest
         }
    })
 });

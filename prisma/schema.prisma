@@ -29,15 +29,26 @@ model Account {
 }
 
 model FriendRequest {
-  id            String   @id @default(uuid())
-  recipient     User     @relation("RecipientsOnFriendRequests", fields: [recipientId], references: [id], onDelete: Cascade)
+  id            String         @id @default(uuid())
+  recipient     User           @relation("RecipientsOnFriendRequests", fields: [recipientId], references: [id], onDelete: Cascade)
   recipientId   String
   recipientName String
-  sender        User     @relation("SendersOnFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  sender        User           @relation("SendersOnFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
   senderId      String
   senderName    String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  Notification  Notification[]
+}
+
+model Notification {
+  id              String         @id @default(uuid())
+  recipient       User           @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  recipientId     String
+  friendRequest   FriendRequest? @relation(fields: [friendRequestId], references: [id], onDelete: Cascade)
+  friendRequestId String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 }
 
 model Session {
@@ -58,8 +69,9 @@ model User {
   sessions               Session[]
   friends                User[]          @relation("Friends")
   friendsRelation        User[]          @relation("Friends")
-  blocked                User[]          @relation("Blocked")
-  blockedRelation        User[]          @relation("Blocked")
+  blockedList            User[]          @relation("BlockedList")
+  blockedRelation        User[]          @relation("BlockedList")
+  notifications          Notification[]
   receivedFriendRequests FriendRequest[] @relation("RecipientsOnFriendRequests")
   sentFriendRequests     FriendRequest[] @relation("SendersOnFriendRequests")
 }
