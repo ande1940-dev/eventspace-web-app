@@ -9,93 +9,75 @@ export const userRouter = router({
                 NOT: {
                     id: ctx.session?.user?.id
                 }
+            },
+            include: {
+                friended: true,
+                friendedBy: true
             }
         });
     }),
     getUserById: protectedProcedure
-    .input(z.string().uuid())
+    .input(z.object({userId: z.string().uuid()}))
     .query(({ctx, input}) => {
         return ctx.prisma.user.findUnique({
             where: {
-                id: input
+                id: input.userId
             }, 
             include: {
-                friends: true,
-                blockedList: true,
-                notifications: true,
+                friended: true,
+                friendedBy: true,
                 receivedFriendRequests: true,
                 sentFriendRequests: true
             }
         })
     }), 
-    
+    getFriendsById: protectedProcedure
+    .input(z.object({userId: z.string().uuid()}))
+    .query(({ctx, input}) => {
+        return ctx.prisma.user.findMany({
+            where: {
+                OR: [{
+                        friended: {
+                            some: {
+                                acceptedById: input.userId
+                            }
+                        },  
+                    }, 
+                    {
+                        friendedBy: {
+                            some: {
+                                initiatedById: input.userId
+                            }
+                        },  
+                    }],
+            }, 
+            orderBy: {
+                name: "desc"
+            }, 
+            include: {
+                friended: true,
+                friendedBy: true,
+                receivedFriendRequests: true,
+                sentFriendRequests: true
+            }
+        })
+    }),
+    getSendersById: protectedProcedure
+    .input(z.object({userId: z.string().uuid()}))
+    .query(({ctx, input}) => {
+        return ctx.prisma.user.findMany({
+            where: {
+                sentFriendRequests: {
+                    some: {
+                        recipientId: input.userId
+                    }
+                }
+            }, 
+            include: {
+                sentFriendRequests: true
+            }
+        })
+    }),
     // Mutations 
-    addToBlockList: protectedProcedure
-    .input(z.object({ blockedUserId: z.string().uuid()}))
-    .mutation(({ctx, input}) => {
-        const sessionUserId = ctx.session.user.id
-        ctx.prisma.user.update({
-            where: {
-                id: sessionUserId
-            }, 
-            data: {
-                blockedList: {
-                    connect: {
-                        id: input.blockedUserId
-                    }
-                }
-            }
-        })
-    }),
-    addToFriendList: protectedProcedure
-    .input(z.object({ friendUserId: z.string().uuid()}))
-    .mutation(({ctx, input}) => {
-        const sessionUserId = ctx.session.user.id
-        ctx.prisma.user.update({
-            where: {
-                id: sessionUserId
-            }, 
-            data: {
-                friends: {
-                    connect: {
-                        id: input.friendUserId
-                    }
-                }
-            }
-        })
-    }),
-    removeFromBlockList: protectedProcedure
-    .input(z.object({blockedUserId: z.string().uuid()}))
-    .mutation(({ctx, input}) => {
-        const sessionUserId = ctx.session.user.id
-        ctx.prisma.user.update({
-            where: {
-                id: sessionUserId
-            }, 
-            data: {
-                blockedList: {
-                    disconnect: {
-                        id: input.blockedUserId
-                    }
-                }
-            }
-        })
-    }),
-    removeFromFriendList: protectedProcedure
-    .input(z.object({friendUserId: z.string().uuid()}))
-    .mutation(({ctx, input}) => {
-        const sessionUserId = ctx.session.user.id
-        ctx.prisma.user.update({
-            where: {
-                id: sessionUserId
-            }, 
-            data: {
-                blockedList: {
-                    disconnect: {
-                        id: input.friendUserId
-                    }
-                }
-            }
-        })
-    }),
+   
 });

@@ -29,27 +29,13 @@ model Account {
 }
 
 model FriendRequest {
-  id            String         @id @default(uuid())
-  recipient     User           @relation("RecipientsOnFriendRequests", fields: [recipientId], references: [id], onDelete: Cascade)
-  recipientId   String
-  recipientName String
-  sender        User           @relation("SendersOnFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
-  senderId      String
-  senderName    String
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  Notification  Notification[]
-}
-
-model Notification {
-  id              String         @id @default(uuid())
-  message         String
-  recipient       User           @relation(fields: [recipientId], references: [id], onDelete: Cascade)
-  recipientId     String
-  friendRequest   FriendRequest? @relation(fields: [friendRequestId], references: [id], onDelete: Cascade)
-  friendRequestId String?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id          String   @id @default(uuid())
+  recipient   User     @relation("RecipientsOnFriendRequests", fields: [recipientId], references: [id], onDelete: Cascade)
+  recipientId String
+  sender      User     @relation("SendersOnFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId    String
+  createdAt   DateTime @default(now())
+  unread      Boolean  @default(true)
 }
 
 model Session {
@@ -68,13 +54,20 @@ model User {
   image                  String?
   accounts               Account[]
   sessions               Session[]
-  friends                User[]          @relation("Friends")
-  friendsRelation        User[]          @relation("Friends")
-  blockedList            User[]          @relation("BlockedList")
-  blockedRelation        User[]          @relation("BlockedList")
-  notifications          Notification[]
+  friendedBy             Friendship[]    @relation("AcceptorOnFriendship")
+  friended               Friendship[]    @relation("InitiatorOnFriendship")
   receivedFriendRequests FriendRequest[] @relation("RecipientsOnFriendRequests")
   sentFriendRequests     FriendRequest[] @relation("SendersOnFriendRequests")
+}
+
+model Friendship {
+  initiatedBy   User     @relation("InitiatorOnFriendship", fields: [initiatedById], references: [id])
+  initiatedById String
+  acceptedBy    User     @relation("AcceptorOnFriendship", fields: [acceptedById], references: [id])
+  acceptedById  String
+  createdAt     DateTime @default(now())
+
+  @@id([acceptedById, initiatedById])
 }
 
 model VerificationToken {

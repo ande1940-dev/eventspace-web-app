@@ -1,102 +1,91 @@
 import { NextPage } from "next";
 import { GetServerSideProps } from 'next';
-import { SessionUser } from "next-auth";
-import { getServerAuthSession } from "../../server/common/get-server-auth-session";
-import { trpc } from "../../utils/trpc";
-import { FriendRequest} from "@prisma/client";
+import type { SessionUser } from "next-auth";
+import { getServerAuthSession } from "@/server/common/get-server-auth-session";
+import { trpc } from "@/utils/trpc";
 
-import Header from "../../components/Header";
-import Image from "next/image";
+import Header from "@/components/Header";
+import ProfileImage from "@/components/ProfileImage";
+import { FriendRequest, Friendship, UserWithRelations } from "@prisma/client";
 
 const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
-    if (userId !== null) {
+    // Queries 
+    const userQuery = trpc.user.getUserById.useQuery({ userId })
 
-        // Queries 
-        const { data: owner } = trpc.user.getUserById.useQuery(userId)
-        const { data: viewer } = trpc.user.getUserById.useQuery(sessionUser.id)
+    // Mutations 
+    const createFriendRequest = trpc.friendRequest.createFriendRequest.useMutation()
+    const deleteFriendship = trpc.friendship.deleteFriendship.useMutation()
+    // const blockUser 
 
-        // Mutations 
-        const blockUserMutation = trpc.user.addToBlockList.useMutation()
-        const createFriendRequestMutation = trpc.friendRequest.createFriendRequest.useMutation()
-        const createNotificationMutation = trpc.notification.createNotification.useMutation()
-        const friendUserMutation = trpc.user.addToFriendList.useMutation()
-        const unblockUserMutation = trpc.user.removeFromBlockList.useMutation()
-        const unfriendUserMutation = trpc.user.removeFromFriendList.useMutation()
+    if (userQuery.isSuccess) {
+        const user = userQuery.data
 
-        const acceptFriendRequest = async () => {
-            // add friend to friends 
-            // delete friendRequest 
-        }
-
-        const declineFriendRequest = () =>  {
-            // delete FriendRequest 
-        }
-
-        const unfriendUser = async () => {
-
-        }
-
-        const sendFriendRequest = async () => {
-            if (owner?.name !== null && owner?.name !== undefined) {
-                const friendRequest: FriendRequest | undefined = await createFriendRequestMutation.mutateAsync({recipientId: userId, recipientName: owner.name})
-                const message = `You received a friend request from ${sessionUser.name}`
-                if (friendRequest !== undefined) {
-                    createNotificationMutation.mutateAsync({friendRequestId: friendRequest.id, recipientId: userId, message})
-                }
-            }
-        }
-
-        const renderFriendOptions = () => {
-            const sentRequest = viewer?.sentFriendRequests.find((request: FriendRequest) => request.recipientId === userId)
-            const receivedRequest = viewer?.receivedFriendRequests.find((request: FriendRequest) => request.senderId === userId)
-
-            // TODO Add Unfriend Option
-            if (sentRequest !== undefined) {
-                return <button disabled>Pending</button>
-            } else if (receivedRequest !== undefined) {
-                return  <div>
-                            <button onClick={acceptFriendRequest}>Accept</button>
-                            <button onClick={declineFriendRequest}>Decline</button>
-                        </div>
-            } else if (owner !== undefined && owner !== null && !viewer?.friends.includes(owner)) {
-                return <button onClick={sendFriendRequest}>Add Friend</button>
-            }
-        }
+        if (user) {
+            const renderFriendOptions = () => {
+                const friended: Friendship | undefined = user.friended.find((friendship: Friendship) => 
+                    friendship.acceptedById == sessionUser.id 
+                )
+                const friendedBy: Friendship | undefined = user.friendedBy.find((friendship: Friendship) => 
+                    friendship.initiatedById == sessionUser.id
+                )
+                const receivedRequest: FriendRequest | undefined = user.sentFriendRequests.find((request: FriendRequest) => 
+                    request.recipientId === sessionUser.id
+                )
+                const sentRequest: FriendRequest | undefined = user.receivedFriendRequests.find((request: FriendRequest) => 
+                    request.senderId === sessionUser.id
+                )
+                
         
-        return (
-            <>
-                <Header sessionUser={sessionUser}/>
-                <main className="grid items-center justify-center">
+               return (
+                    <div className="flex gap-5">
+                         {friended !== undefined && 
+                            <button onClick={() => 
+                                deleteFriendship.mutate({acceptedById: sessionUser.id, initiatedById: userId})}
+                            >
+                                Unfriend
+                            </button>
+                        }
+                        {friendedBy !== undefined && 
+                            <button onClick={() => 
+                                deleteFriendship.mutate({acceptedById: userId, initiatedById: sessionUser.id})}
+                            >
+                                Unfriend
+                            </button>
+                        }
+                        {receivedRequest !== undefined && 
+                            <button>Visit Friend Requests</button>
+                        }
+                        {sentRequest !== undefined && 
+                            <button>Pending</button>
+                        }
+                        {friended === undefined && friendedBy === undefined && receivedRequest === undefined && sentRequest === undefined && 
+                            <button onClick={async () => await createFriendRequest.mutateAsync({recipientId: userId})}>Add Friend</button>
+                        }
+                    </div>
+               )
+            }
+
+            return (
+               <div>
+                    <Header sessionUser={sessionUser}/>
+                    <ProfileImage image={user.image} size={50}/>
+                    <p>{user.name}</p>
                     <div>
-                        {owner?.image !== null && owner?.image !== undefined && 
-                            <Image
-                                src={owner.image}
-                                width={40}
-                                height={40}
-                                quality={90}
-                                className="rounded-full"
-                            />
+                        {
+                            renderFriendOptions()
                         }
                     </div>
-                    <div className="flex">
-                        { renderFriendOptions() }
-                        { owner !== undefined && owner !== null  && viewer?.blockedList !== undefined && 
-                            <div>
-                                {!viewer?.blockedList.includes(owner) ? 
-                                   <button onClick={() =>  blockUserMutation.mutate({blockedUserId: userId})}>Block</button>
-                                   : <button onClick={() =>  unblockUserMutation.mutate({blockedUserId: userId})}>Unblock</button>
-                                }
-                            </div>
-                        }
-                    </div>
-                </main>
-            </>
-        ) 
+               </div>
+            )
+        }
+
+        return <h1>Error</h1>
+    } else if (userQuery.isLoading) {
+        return <h1>Loading</h1>
     } else {
-        return (
-            <div>Error</div>
-        )
+        return <h1>Error</h1>
     }
+       
     
 }
 
@@ -104,6 +93,24 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const session = await getServerAuthSession(context);
     const sessionUser = session?.user === undefined ? null : session.user
     const userId = context.params?.userId === undefined ? null : context.params.userId
+
+    if (userId === null) {
+        return {
+            redirect: {
+                permanent: false, 
+                destination: "/explore"
+            }
+        }
+    } 
+    
+    if (sessionUser === null) {
+        return {
+            redirect: {
+                permanent: false, 
+                destination: "/signin"
+            }
+        }
+    }
 
     if (userId === sessionUser?.id) {
         return {
@@ -114,17 +121,19 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         }
     }
     
+
     return {
         props: {
             sessionUser,
             userId
         }
-    }    
+    } 
+      
 }
 
 interface IProfileProps {
     sessionUser: SessionUser
-    userId: string | null
+    userId: string
 }
 
 export default Profile;

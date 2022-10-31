@@ -3,16 +3,15 @@ import { router } from "../trpc";
 import { exampleRouter } from "./example";
 import { friendRequestRouter } from "./friendRequest";
 import { userRouter } from "./user"
-import { notificationRouter } from "./notification";
 import { authRouter } from "./auth";
+import { friendshipRouter } from "./friendship";
 
 export const appRouter = router({
   example: exampleRouter,
   auth: authRouter,
-  
   friendRequest: friendRequestRouter,
-  user: userRouter,
-  notification: notificationRouter
+  friendship: friendshipRouter,
+  user: userRouter
 });
 
 // export type definition of API

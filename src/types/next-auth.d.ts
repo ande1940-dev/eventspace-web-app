@@ -1,3 +1,4 @@
+import { FriendRequest, Friendship } from "@prisma/client";
 import { DefaultSession } from "next-auth";
 
 declare module "next-auth" {

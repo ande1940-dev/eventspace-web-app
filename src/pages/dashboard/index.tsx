@@ -3,44 +3,37 @@ import { GetServerSideProps } from 'next';
 import { SessionUser } from "next-auth";
 import Image from "next/image";
 import Link from "next/link";
-import { getServerAuthSession } from "../server/common/get-server-auth-session";
-import Header from "../components/Header";
-import { trpc } from "../utils/trpc";
-import { FriendRequest, Notification, User } from "@prisma/client";
+import { getServerAuthSession } from "@/server/common/get-server-auth-session";
+import Header from "@/components/Header";
+import { trpc } from "@/utils/trpc";
+import { FriendRequest, Friendship, User } from "@prisma/client";
 
 const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
-    const query = trpc.user.getUserById.useQuery(sessionUser.id)
-    if (query.isLoading) {
-        //display loading screen 
+    //Queries 
+    const userQuery = trpc.user.getUserById.useQuery({ userId: sessionUser.id})
+
+    if (userQuery.isSuccess) {
+        const user = userQuery.data
+
+        if (user) {
+            // Show events hosted and events joined
+            return (
+                <>
+                    <Header sessionUser={sessionUser}/>
+                    <nav>
+                        <Link href="/explore">Explore</Link>
+                        <Link href="/dashboard/friends">Friends</Link>
+                    </nav>
+                    <h1>Dashboard</h1>
+
+                </>
+                
+            )
+        } 
+        return <h1>Error</h1>
+    } else if (userQuery.isLoading || userQuery.isFetching) {
         return <h1>Loading</h1>
-    } else if (query.isSuccess && query.data !== null) {
-        const user = query.data
-        return (
-            <>
-                <Header sessionUser={sessionUser}/>
-                <nav>
-                    <Link href="/explore">Explore</Link>
-                </nav>
-                <main> 
-                    {
-                        user.notifications.map((notification: Notification) =>
-                            // TODO: when the notification is clicked open dashboard/notifications/notificationId
-                            <Link href={`/notifications/${notification.id}`}>
-                                <a>
-                                    <div>
-                                        <p>{notification.message}</p>
-                                        <p>{notification.createdAt.toLocaleString()}</p>
-                                     </div>
-                                </a>
-                            </Link>
-                        )
-                    }
-                </main>
-                <footer></footer>
-            </>
-        )
     } else {
-        // display error screen
         return <h1>Error</h1>
     }
 }
