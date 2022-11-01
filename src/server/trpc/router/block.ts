@@ -2,7 +2,7 @@ import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { z } from "zod";
 
 export const blockRouter = router({
-    // Queries
+    //Mutations
     createBlock: protectedProcedure
     .input(z.object({blockedId: z.string().uuid()}))
     .mutation(async ({ctx, input}) => {

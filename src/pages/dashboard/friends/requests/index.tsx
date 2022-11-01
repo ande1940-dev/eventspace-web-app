@@ -6,6 +6,7 @@ import { trpc } from "@/utils/trpc";
 import FriendRequestList from "@/components/Lists/FriendRequestList";
 import Header from "@/components/Header";
 
+//TODO: When User Accepts Send A Notification 
 const FriendRequestsPage: NextPage<IFriendRequestsProps> = ({ sessionUser }) => {
   //Queries 
   const sendersQuery = trpc.user.getSendersById.useQuery({ userId: sessionUser.id})

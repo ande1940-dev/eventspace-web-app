@@ -9,7 +9,8 @@ import ProfileImage from "@/components/ProfileImage";
 import { Block, FriendRequest, Friendship } from "@prisma/client";
 import Link from "next/link";
 
-//TODO: If session user is already blocked show only block options 
+//TODO: If session user is already blocked show only block options
+//TODO: When session user is redirected to friend request page: either hash or use query to make sure they do directly to the correct request 
 const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
     // Queries 
     const userQuery = trpc.user.getUserById.useQuery({ userId })

@@ -29,6 +29,7 @@ export const userRouter = router({
                 blockedBy: true,
                 friended: true,
                 friendedBy: true,
+                hostedEvents: true,
                 receivedFriendRequests: true,
                 sentFriendRequests: true
             }

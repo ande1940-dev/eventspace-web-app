@@ -1,3 +1,6 @@
+Invites will be kept until the event starts
+Invites will have a 
+
 Flow Diagram 
     Pages: 
         1) Landing

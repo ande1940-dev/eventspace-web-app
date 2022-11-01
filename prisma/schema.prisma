@@ -38,6 +38,13 @@ model Block {
   @@id([blockedId, blockedById])
 }
 
+model Event {
+  id     String @id @default(uuid())
+  name   String
+  host   User   @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  hostId String
+}
+
 model FriendRequest {
   id          String   @id @default(uuid())
   recipient   User     @relation("RecipientsOnFriendRequests", fields: [recipientId], references: [id], onDelete: Cascade)
@@ -54,6 +61,7 @@ model Friendship {
   initiatedBy   User     @relation("InitiatorsOnFriendships", fields: [initiatedById], references: [id])
   initiatedById String
   createdAt     DateTime @default(now())
+  unread        Boolean  @default(true)
 
   @@id([acceptedById, initiatedById])
 }
@@ -78,6 +86,7 @@ model User {
   blockedBy              Block[]         @relation("BlockedOnBlocks")
   friended               Friendship[]    @relation("InitiatorsOnFriendships")
   friendedBy             Friendship[]    @relation("AcceptorsOnFriendships")
+  hostedEvents           Event[]
   receivedFriendRequests FriendRequest[] @relation("RecipientsOnFriendRequests")
   sentFriendRequests     FriendRequest[] @relation("SendersOnFriendRequests")
 }
