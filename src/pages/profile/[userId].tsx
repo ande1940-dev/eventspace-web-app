@@ -6,8 +6,10 @@ import { trpc } from "@/utils/trpc";
 
 import Header from "@/components/Header";
 import ProfileImage from "@/components/ProfileImage";
-import { FriendRequest, Friendship, UserWithRelations } from "@prisma/client";
+import { Block, FriendRequest, Friendship } from "@prisma/client";
+import Link from "next/link";
 
+//TODO: If session user is already blocked show only block options 
 const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
     // Queries 
     const userQuery = trpc.user.getUserById.useQuery({ userId })
@@ -15,19 +17,34 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
     // Mutations 
     const createFriendRequest = trpc.friendRequest.createFriendRequest.useMutation()
     const deleteFriendship = trpc.friendship.deleteFriendship.useMutation()
-    // const blockUser 
+    const createBlock = trpc.block.createBlock.useMutation()
+    const unblockUser = trpc.block.deleteBlock.useMutation()
 
     if (userQuery.isSuccess) {
         const user = userQuery.data
-
+        
         if (user) {
-            const renderFriendOptions = () => {
-                const friended: Friendship | undefined = user.friended.find((friendship: Friendship) => 
+            const friended: Friendship | undefined = user.friended.find((friendship: Friendship) => 
                     friendship.acceptedById == sessionUser.id 
-                )
-                const friendedBy: Friendship | undefined = user.friendedBy.find((friendship: Friendship) => 
-                    friendship.initiatedById == sessionUser.id
-                )
+            )
+            const friendedBy: Friendship | undefined = user.friendedBy.find((friendship: Friendship) => 
+                friendship.initiatedById == sessionUser.id
+            )
+            const block: Block | undefined = user.blocked.find((block: Block) => 
+                    block.blockedById === sessionUser.id
+            )
+
+            const blockUser = () => {
+                if (friended !== undefined) {
+                    deleteFriendship.mutate({acceptedById: sessionUser.id, initiatedById: userId})
+                }
+                if (friendedBy !== undefined) {
+                    deleteFriendship.mutate({acceptedById: userId, initiatedById: sessionUser.id})
+                } 
+                createBlock.mutate({blockedId: userId})
+            }
+
+            const renderFriendOptions = () => {
                 const receivedRequest: FriendRequest | undefined = user.sentFriendRequests.find((request: FriendRequest) => 
                     request.recipientId === sessionUser.id
                 )
@@ -35,7 +52,6 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
                     request.senderId === sessionUser.id
                 )
                 
-        
                return (
                     <div className="flex gap-5">
                          {friended !== undefined && 
@@ -53,28 +69,49 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
                             </button>
                         }
                         {receivedRequest !== undefined && 
-                            <button>Visit Friend Requests</button>
+                            <div>
+                                <p>Sent you a friend request</p>
+                                <Link href="/dashboard/friends/requests">Respond</Link>
+                            </div> 
                         }
                         {sentRequest !== undefined && 
                             <button>Pending</button>
                         }
-                        {friended === undefined && friendedBy === undefined && receivedRequest === undefined && sentRequest === undefined && 
+                        {friended === undefined && friendedBy === undefined && receivedRequest === undefined && sentRequest === undefined && block === undefined &&  
                             <button onClick={async () => await createFriendRequest.mutateAsync({recipientId: userId})}>Add Friend</button>
                         }
                     </div>
                )
             }
+            
+            const renderBlockOptions = () => {
+                if (block !== undefined){
+                    return (
+                        <button onClick={() => unblockUser.mutate({blockedId: userId, blockedById: sessionUser.id})}>Unblock</button>
+                    )
+                } else {
+                    return (
+                        <button onClick={blockUser}>Block</button>
+                    )
+                }
+                
+            }
 
             return (
                <div>
                     <Header sessionUser={sessionUser}/>
-                    <ProfileImage image={user.image} size={50}/>
-                    <p>{user.name}</p>
-                    <div>
-                        {
-                            renderFriendOptions()
-                        }
-                    </div>
+                    <main className="grid justify-center">
+                        <ProfileImage image={user.image} size={50}/>
+                        <p>{user.name}</p>
+                        <div className="flex gap-5">
+                            {
+                                renderFriendOptions()
+                            }
+                            {
+                                renderBlockOptions()
+                            }
+                        </div>
+                    </main>
                </div>
             )
         }
@@ -85,8 +122,6 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
     } else {
         return <h1>Error</h1>
     }
-       
-    
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
@@ -121,7 +156,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         }
     }
     
-
     return {
         props: {
             sessionUser,

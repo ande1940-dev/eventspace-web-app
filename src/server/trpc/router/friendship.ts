@@ -28,7 +28,7 @@ export const friendshipRouter = router({
    .mutation(({ ctx, input }) => {
         return ctx.prisma.friendship.delete({
             where: {
-                initiatedById_acceptedById: input
+                acceptedById_initiatedById: input
             }
         })
    })

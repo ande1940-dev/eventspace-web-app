@@ -2,13 +2,15 @@
 import { router } from "../trpc";
 import { exampleRouter } from "./example";
 import { friendRequestRouter } from "./friendRequest";
+import { friendshipRouter } from "./friendship";
 import { userRouter } from "./user"
 import { authRouter } from "./auth";
-import { friendshipRouter } from "./friendship";
+import { blockRouter } from "./block";
 
 export const appRouter = router({
   example: exampleRouter,
   auth: authRouter,
+  block: blockRouter,
   friendRequest: friendRequestRouter,
   friendship: friendshipRouter,
   user: userRouter

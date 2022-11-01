@@ -1,5 +1,6 @@
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { z } from "zod";
+import { User } from "@prisma/client";
 
 export const userRouter = router({
     // Queries 
@@ -22,8 +23,10 @@ export const userRouter = router({
         return ctx.prisma.user.findUnique({
             where: {
                 id: input.userId
-            }, 
+            },
             include: {
+                blocked: true,
+                blockedBy: true,
                 friended: true,
                 friendedBy: true,
                 receivedFriendRequests: true,
@@ -55,6 +58,8 @@ export const userRouter = router({
                 name: "desc"
             }, 
             include: {
+                blocked: true,
+                blockedBy: true,
                 friended: true,
                 friendedBy: true,
                 receivedFriendRequests: true,
@@ -79,5 +84,4 @@ export const userRouter = router({
         })
     }),
     // Mutations 
-   
 });

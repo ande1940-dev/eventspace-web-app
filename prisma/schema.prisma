@@ -28,6 +28,16 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
+model Block {
+  blocked     User     @relation("BlockedOnBlocks", fields: [blockedId], references: [id])
+  blockedId   String
+  blockedBy   User     @relation("BlockersOnBlocks", fields: [blockedById], references: [id])
+  blockedById String
+  createdAt   DateTime @default(now())
+
+  @@id([blockedId, blockedById])
+}
+
 model FriendRequest {
   id          String   @id @default(uuid())
   recipient   User     @relation("RecipientsOnFriendRequests", fields: [recipientId], references: [id], onDelete: Cascade)
@@ -36,6 +46,16 @@ model FriendRequest {
   senderId    String
   createdAt   DateTime @default(now())
   unread      Boolean  @default(true)
+}
+
+model Friendship {
+  acceptedBy    User     @relation("AcceptorsOnFriendships", fields: [acceptedById], references: [id])
+  acceptedById  String
+  initiatedBy   User     @relation("InitiatorsOnFriendships", fields: [initiatedById], references: [id])
+  initiatedById String
+  createdAt     DateTime @default(now())
+
+  @@id([acceptedById, initiatedById])
 }
 
 model Session {
@@ -54,20 +74,12 @@ model User {
   image                  String?
   accounts               Account[]
   sessions               Session[]
-  friendedBy             Friendship[]    @relation("AcceptorOnFriendship")
-  friended               Friendship[]    @relation("InitiatorOnFriendship")
+  blocked                Block[]         @relation("BlockersOnBlocks")
+  blockedBy              Block[]         @relation("BlockedOnBlocks")
+  friended               Friendship[]    @relation("InitiatorsOnFriendships")
+  friendedBy             Friendship[]    @relation("AcceptorsOnFriendships")
   receivedFriendRequests FriendRequest[] @relation("RecipientsOnFriendRequests")
   sentFriendRequests     FriendRequest[] @relation("SendersOnFriendRequests")
-}
-
-model Friendship {
-  initiatedBy   User     @relation("InitiatorOnFriendship", fields: [initiatedById], references: [id])
-  initiatedById String
-  acceptedBy    User     @relation("AcceptorOnFriendship", fields: [acceptedById], references: [id])
-  acceptedById  String
-  createdAt     DateTime @default(now())
-
-  @@id([acceptedById, initiatedById])
 }
 
 model VerificationToken {
