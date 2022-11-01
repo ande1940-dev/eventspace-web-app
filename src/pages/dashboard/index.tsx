@@ -6,17 +6,38 @@ import Link from "next/link";
 import { getServerAuthSession } from "@/server/common/get-server-auth-session";
 import Header from "@/components/Header";
 import { trpc } from "@/utils/trpc";
-import { FriendRequest, Friendship, User } from "@prisma/client";
+import { Event, FriendRequest, Friendship, User } from "@prisma/client";
+import { FormEventHandler, MouseEventHandler, useRef } from "react";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { useRouter } from "next/router";
 
 const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
+    // Mutations 
+    const createEvent = trpc.event.createEvent.useMutation()
+
     //Queries 
     const userQuery = trpc.user.getUserById.useQuery({ userId: sessionUser.id})
+
+    // Mutation 
+    const deleteEvent = trpc.event.deleteEvent.useMutation()
+
+    //Ref 
+    const modalRef = useRef<HTMLDialogElement>(null)
+
+    // Form 
+    const { register, handleSubmit, formState: { errors } } = useForm<IFormInput>()
+
+    const router = useRouter()
+
+    const onCreateEvent: SubmitHandler<IFormInput> = async (input) => {
+        const event = await createEvent.mutateAsync({name: input.name})
+        router.replace(`/event/${event.id}`)
+    }
 
     if (userQuery.isSuccess) {
         const user = userQuery.data
 
         if (user) {
-            // Show events hosted and events joined
             return (
                 <>
                     <Header sessionUser={sessionUser}/>
@@ -24,8 +45,32 @@ const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
                         <Link href="/explore">Explore</Link>
                         <Link href="/dashboard/friends">Friends</Link>
                     </nav>
-                    <h1>Dashboard</h1>
-
+                    <main>
+                        <div>
+                            {
+                                user.hostedEvents.map((event: Event) =>
+                                    <div>
+                                        <Link href={`/event/${event.id}`}>{event.name}</Link>
+                                        <button onClick={() => deleteEvent.mutate({ eventId: event.id })}>Delete</button>
+                                    </div>
+                                )
+                            }
+                        </div>
+                        <button onClick={() => modalRef.current?.showModal()}>Create Event</button>
+                        <dialog ref={modalRef}>
+                            <div className="flex justify-between gap-5">
+                                <h1>Create Event</h1>
+                                <button onClick={() => modalRef.current?.close()}>X</button>
+                            </div>
+                            <form onSubmit={handleSubmit(onCreateEvent)} className="grid">
+                                <label>
+                                    Name
+                                    <input {...register("name")} type="text" placeholder="Name"/>
+                                </label>
+                                <button type="submit">Create</button>
+                            </form>
+                        </dialog>
+                    </main>
                 </>
                 
             )
@@ -58,8 +103,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }    
 }
 
+
+
 interface IDashboardProps {
     sessionUser: SessionUser
+}
+
+interface IFormInput {
+   name: string
+   //location: string 
 }
 
 export default Dashboard;
