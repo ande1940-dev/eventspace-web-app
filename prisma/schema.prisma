@@ -50,11 +50,12 @@ model Invitation {
 }
 
 model Event {
-  id          String       @id @default(uuid())
-  name        String
-  host        User         @relation(fields: [hostId], references: [id], onDelete: Cascade)
-  hostId      String
-  invitations Invitation[]
+  id           String        @id @default(uuid())
+  name         String
+  host         User          @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  hostId       String
+  invitations  Invitation[]
+  joinRequests JoinRequest[]
 }
 
 model FriendRequest {
@@ -76,6 +77,16 @@ model Friendship {
   unread        Boolean  @default(true)
 
   @@id([acceptedById, initiatedById])
+}
+
+model JoinRequest {
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  senderId  String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId   String
+  createdAt DateTime @default(now())
+
+  @@id([eventId, senderId])
 }
 
 model Session {
@@ -102,6 +113,7 @@ model User {
   invitations            Invitation[]
   receivedFriendRequests FriendRequest[] @relation("RecipientsOnFriendRequests")
   sentFriendRequests     FriendRequest[] @relation("SendersOnFriendRequests")
+  sentJoinRequest        JoinRequest[]
 }
 
 model VerificationToken {

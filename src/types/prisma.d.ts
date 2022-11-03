@@ -9,6 +9,7 @@ declare module "@prisma/client" {
     friended?: Friendship[]
     friendedBy?: Friendship[]
     hostedEvents?: Event[]
+    joinRequests?: JoinRequest[]
     sentFriendRequests?: FriendRequest[]
     receivedFriendRequests?: FriendRequest[]
     invitations?: Invitation[]

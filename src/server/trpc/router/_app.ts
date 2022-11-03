@@ -10,6 +10,7 @@ import { friendRequestRouter } from "./friendRequest";
 import { friendshipRouter } from "./friendship";
 import { userRouter } from "./user"
 import { invitationRouter } from "./invitation";
+import { joinRequestRouter } from "./joinRequest";
 
 export const appRouter = router({
   example: exampleRouter,
@@ -19,6 +20,7 @@ export const appRouter = router({
   friendRequest: friendRequestRouter,
   friendship: friendshipRouter,
   invitation: invitationRouter,
+  joinRequest: joinRequestRouter,
   user: userRouter
 });
 

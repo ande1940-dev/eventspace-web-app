@@ -28,13 +28,11 @@ const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
      */
     const onCreateEvent: SubmitHandler<IFormInput> = async (input) => {
         const event = await createEvent.mutateAsync({name: input.name})
-        trpc.useContext()
         router.replace(`/event/${event.id}`)
     }
 
     if (eventsQuery.isSuccess) {
         const events = eventsQuery.data
-
         if (events) {
             return (
                 <>

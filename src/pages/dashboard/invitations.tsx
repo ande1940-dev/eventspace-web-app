@@ -13,7 +13,12 @@ const InvitationsPage: NextPage<IInvitationProps> = ({ sessionUser }) => {
     if (hostsQuery.isSuccess) {
         const hosts = hostsQuery.data
         if (hosts) {
-            <div>Success</div>
+            return (
+                hosts.map((user: UserWithRelations) => 
+
+                
+                )
+            )
         }
         return <h1>Error</h1>
         

@@ -11,7 +11,8 @@ export const eventRouter = router({
                 id:input.eventId
             },
             include: {
-                invitations: true
+                invitations: true,
+                joinRequests: true
             }
         })
     }),

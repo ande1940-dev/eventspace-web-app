@@ -1,5 +1,7 @@
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { z } from "zod";
+import { User } from "@prisma/client";
+
 
 export const friendRequestRouter = router({
    // Mutations 

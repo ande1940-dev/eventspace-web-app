@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { getServerAuthSession } from "@/server/common/get-server-auth-session";
 import { trpc } from '@/utils/trpc';
 import Header from '@/components/Header';
-import { Invitation, User } from '@prisma/client';
+import { Invitation, JoinRequest, User } from '@prisma/client';
 import ProfileImage from '@/components/ProfileImage';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
@@ -16,8 +16,10 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser}) => {
   const inviteesQuery = trpc.user.getInviteesByEvent.useQuery({ eventId })
   const unInvitedFriendsQuery = trpc.user.getUninvitedByEvent.useQuery({ eventId })
   // Mutation 
-  const deleteEvent = trpc.event.deleteEvent.useMutation()
   const createInvitation = trpc.invitation.createInvitation.useMutation()
+  const deleteEvent = trpc.event.deleteEvent.useMutation()
+  const deleteInvitation = trpc.invitation.deleteInvitation.useMutation()
+  const deleteJoinRequest = trpc.joinRequest.deleteJoinRequest.useMutation()
   // Form 
   const { register, handleSubmit, formState: { errors } } = useForm<IFormInput>()
   //Ref
@@ -27,7 +29,10 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser}) => {
     const event = eventQuery.data
     const invitees = inviteesQuery.data
     const uninvitedFriends = unInvitedFriendsQuery.data
-
+    const onAcceptJoinRequest = (senderId: string) => {
+        deleteJoinRequest.mutate({ eventId, senderId })
+        createInvitation.mutate({ eventId, userId: senderId })
+    }
     const onAddInvitees: SubmitHandler<IFormInput> = (input) => {
       console.log(input.invitees)
       if (Array.isArray(input.invitees)) {
@@ -37,13 +42,14 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser}) => {
         createInvitation.mutate({eventId, userId: input.invitees})
       }
     }
-    const renderInvitee = (recipientId: string) => {
+    const renderInvitee = (recipientId: string, index: number) => {
       const invitee = invitees.find((invitee: User) => invitee.id === recipientId)
       if (invitee !== undefined) { 
         return (
-          <div>
+          <div key={index}>
               <ProfileImage image={invitee.image} size={40}/>
               <p>{invitee?.name}</p>
+              <button onClick={() => deleteInvitation.mutate({eventId, recipientId})}>Delete</button>
           </div>
         )
       }
@@ -60,8 +66,8 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser}) => {
             <div>
               <h1>Invitations</h1>
               {
-                event.invitations.map((invitation: Invitation) => 
-                  renderInvitee(invitation.recipientId)
+                event.invitations.map((invitation: Invitation, index: number) => 
+                  renderInvitee(invitation.recipientId, index)
                 )
               }
             </div>
@@ -86,6 +92,20 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser}) => {
                 <button type="submit">Send Invitation</button>
               </form>
             </dialog>
+            <div>
+              <h1>Requests</h1>
+              {
+                event.joinRequests.map((request: JoinRequest, index: number) => 
+                  <div key={index}>
+                      <p>{request.senderId}</p>
+                      <div className='flex'>
+                        <button onClick={() => onAcceptJoinRequest(request.senderId)}>Accept</button>
+                        <button onClick={() => deleteJoinRequest.mutate({eventId, senderId: request.senderId})}>Decline</button>
+                      </div>
+                  </div>
+                )
+              }
+            </div>
           </main>
         </div>
       )

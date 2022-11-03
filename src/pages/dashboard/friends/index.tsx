@@ -10,16 +10,11 @@ import FriendList from "@/components/Lists/FriendList";
 
 const FriendsPage: NextPage<IFriendsProps> = ({sessionUser}) => {
     //Queries 
-    const userQuery = trpc.user.getUserById.useQuery({ userId: sessionUser.id})
     const friendsQuery = trpc.user.getFriendsById.useQuery({ userId: sessionUser.id})
 
-    //Mutations 
-
-    if (userQuery.isSuccess && friendsQuery.isSuccess) {
+    if (friendsQuery.isSuccess) {
         const friends = friendsQuery.data
-        const user = userQuery.data
-
-        if (friends && user) {
+        if (friends) {
             return (
                 <div>
                     <Header sessionUser={sessionUser} />
@@ -32,7 +27,7 @@ const FriendsPage: NextPage<IFriendsProps> = ({sessionUser}) => {
         } else {
             return <h1>Error</h1>
         }
-    } else if (userQuery.isLoading || userQuery.isFetching) {
+    } else if (friendsQuery.isLoading || friendsQuery.isFetching) {
         return <h1>Loading</h1>
     } else {
         return <h1>Error</h1>

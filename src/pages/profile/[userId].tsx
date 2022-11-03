@@ -14,17 +14,15 @@ import Link from "next/link";
 const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
     // Queries 
     const userQuery = trpc.user.getUserById.useQuery({ userId })
-
     // Mutations 
     const createFriendRequest = trpc.friendRequest.createFriendRequest.useMutation()
     const deleteFriendship = trpc.friendship.deleteFriendship.useMutation()
     const createBlock = trpc.block.createBlock.useMutation()
     const unblockUser = trpc.block.deleteBlock.useMutation()
-    
+    const joinEvent = trpc.joinRequest.createJoinRequest.useMutation()
 
     if (userQuery.isSuccess) {
         const user = userQuery.data
-        
         if (user) {
             const friended: Friendship | undefined = user.friended.find((friendship: Friendship) => 
                     friendship.acceptedById == sessionUser.id 
@@ -119,6 +117,7 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
                                 user.hostedEvents.map((event: Event, index: number) =>
                                     <div key={index}>
                                         <Link href={`dashboard/event/${event.id}`}>{event.name}</Link>
+                                        <button onClick={() => joinEvent.mutate({eventId: event.id})}>Join</button>
                                     </div>
                                 )
                             }
