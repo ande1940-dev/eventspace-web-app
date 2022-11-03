@@ -6,7 +6,7 @@ import { trpc } from "@/utils/trpc";
 
 import Header from "@/components/Header";
 import ProfileImage from "@/components/ProfileImage";
-import { Block, FriendRequest, Friendship } from "@prisma/client";
+import { Block, Event, FriendRequest, Friendship } from "@prisma/client";
 import Link from "next/link";
 
 //TODO: If session user is already blocked show only block options
@@ -20,6 +20,7 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
     const deleteFriendship = trpc.friendship.deleteFriendship.useMutation()
     const createBlock = trpc.block.createBlock.useMutation()
     const unblockUser = trpc.block.deleteBlock.useMutation()
+    
 
     if (userQuery.isSuccess) {
         const user = userQuery.data
@@ -110,6 +111,16 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
                             }
                             {
                                 renderBlockOptions()
+                            }
+                        </div>
+                        
+                        <div>
+                            {
+                                user.hostedEvents.map((event: Event, index: number) =>
+                                    <div key={index}>
+                                        <Link href={`dashboard/event/${event.id}`}>{event.name}</Link>
+                                    </div>
+                                )
                             }
                         </div>
                     </main>

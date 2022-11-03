@@ -17,6 +17,14 @@ export const trpc = createTRPCNext<AppRouter>({
   config() {
     return {
       transformer: superjson,
+      queryClientConfig: {
+        defaultOptions: {
+          queries: {
+            staleTime: Infinity, 
+            cacheTime: Infinity
+          }
+        }
+      },
       links: [
         loggerLink({
           enabled: (opts) =>

@@ -9,9 +9,21 @@ export const eventRouter = router({
         return ctx.prisma.event.findUnique({
             where: {
                 id:input.eventId
+            },
+            include: {
+                invitations: true
             }
         })
-    }), 
+    }),
+    getHostedEvents: protectedProcedure
+    .input(z.object({userId: z.string().uuid()}))
+    .query(({ctx, input}) => {
+        return ctx.prisma.event.findMany({
+            where: {
+                hostId: input.userId
+            }
+        })
+    }),
 
     //Mutations
     createEvent: protectedProcedure

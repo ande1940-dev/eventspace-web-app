@@ -1,57 +1,55 @@
 import { NextPage } from "next";
 import { GetServerSideProps } from 'next';
 import { SessionUser } from "next-auth";
-import Image from "next/image";
 import Link from "next/link";
 import { getServerAuthSession } from "@/server/common/get-server-auth-session";
 import Header from "@/components/Header";
 import { trpc } from "@/utils/trpc";
-import { Event, FriendRequest, Friendship, User } from "@prisma/client";
-import { FormEventHandler, MouseEventHandler, useRef } from "react";
+import { Event } from "@prisma/client";
+import { useRef } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useRouter } from "next/router";
 
+//TODO: Invalidate Queries
 const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
-    // Mutations 
+    //Queries
+    const eventsQuery = trpc.event.getHostedEvents.useQuery({ userId: sessionUser.id})
+    //Mutations 
     const createEvent = trpc.event.createEvent.useMutation()
 
-    //Queries 
-    const userQuery = trpc.user.getUserById.useQuery({ userId: sessionUser.id})
-
-    // Mutation 
-    const deleteEvent = trpc.event.deleteEvent.useMutation()
-
-    //Ref 
     const modalRef = useRef<HTMLDialogElement>(null)
-
-    // Form 
     const { register, handleSubmit, formState: { errors } } = useForm<IFormInput>()
-
     const router = useRouter()
 
+    /**
+     * Uses mutation to create an event & redirects to the newly created event page
+     *
+     * @param {{name: string}} input The data submitted from the event form
+     */
     const onCreateEvent: SubmitHandler<IFormInput> = async (input) => {
         const event = await createEvent.mutateAsync({name: input.name})
+        trpc.useContext()
         router.replace(`/event/${event.id}`)
     }
 
-    if (userQuery.isSuccess) {
-        const user = userQuery.data
+    if (eventsQuery.isSuccess) {
+        const events = eventsQuery.data
 
-        if (user) {
+        if (events) {
             return (
                 <>
                     <Header sessionUser={sessionUser}/>
                     <nav>
                         <Link href="/explore">Explore</Link>
                         <Link href="/dashboard/friends">Friends</Link>
+                        <Link href="/dashboard/invitations">Invitations</Link>
                     </nav>
                     <main>
                         <div>
                             {
-                                user.hostedEvents.map((event: Event) =>
-                                    <div>
-                                        <Link href={`/event/${event.id}`}>{event.name}</Link>
-                                        <button onClick={() => deleteEvent.mutate({ eventId: event.id })}>Delete</button>
+                                events.map((event: Event, index: number) =>
+                                    <div key={index}>
+                                        <Link href={`dashboard/event/${event.id}`}>{event.name}</Link>
                                     </div>
                                 )
                             }
@@ -76,7 +74,7 @@ const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
             )
         } 
         return <h1>Error</h1>
-    } else if (userQuery.isLoading || userQuery.isFetching) {
+    } else if (eventsQuery.isLoading || eventsQuery.isFetching) {
         return <h1>Loading</h1>
     } else {
         return <h1>Error</h1>
@@ -102,8 +100,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         }
     }    
 }
-
-
 
 interface IDashboardProps {
     sessionUser: SessionUser

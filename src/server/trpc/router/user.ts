@@ -4,7 +4,8 @@ import { User } from "@prisma/client";
 
 export const userRouter = router({
     // Queries 
-    getAllUsers: publicProcedure.query(({ ctx }) => {
+    getAllUsers: publicProcedure
+    .query(({ ctx }) => {
         return ctx.prisma.user.findMany({
             where: {
                 NOT: {
@@ -19,7 +20,7 @@ export const userRouter = router({
     }),
     getUserById: protectedProcedure
     .input(z.object({userId: z.string().uuid()}))
-    .query(({ctx, input}) => {
+    .query(({ ctx, input }) => {
         return ctx.prisma.user.findUnique({
             where: {
                 id: input.userId
@@ -35,9 +36,81 @@ export const userRouter = router({
             }
         })
     }), 
+    getHostsById: protectedProcedure
+    .query(({ ctx }) => {
+        return ctx.prisma.user.findMany({
+            where: {
+                hostedEvents: {
+                    some: {
+                        invitations : {
+                            some: {
+                                recipientId: ctx.session.user.id
+                            }
+                        }
+                    }
+                }       
+            }, 
+            include: {
+                invitations: true, 
+                friended: true, 
+                friendedBy: true,
+                sentFriendRequests: true,
+                hostedEvents: true,
+                receivedFriendRequests: true
+            }
+        })
+    }),
+    getInviteesByEvent: protectedProcedure
+    .input(z.object({eventId: z.string().uuid()}))
+    .query(({ ctx, input }) => {
+        return ctx.prisma.user.findMany({
+            where: {      
+                invitations: {
+                    some: {
+                        eventId: input.eventId
+                    }
+                } 
+            }
+        })
+    }),
+    getUninvitedByEvent: protectedProcedure
+    .input(z.object({eventId: z.string().uuid()}))
+    .query(({ ctx, input }) => {
+        return ctx.prisma.user.findMany({
+            where: { 
+                NOT: [
+                    {      
+                        invitations: {
+                            some: {
+                                eventId: input.eventId
+                            }
+                        }
+                    } 
+                ], 
+                AND: [
+                    {
+                        OR: [{
+                            friended: {
+                                some: {
+                                    acceptedById: ctx.session.user.id
+                                }
+                            },  
+                        }, 
+                        {
+                            friendedBy: {
+                                some: {
+                                    initiatedById: ctx.session.user.id
+                                }
+                            },  
+                        }],
+                    }
+                ]
+            }, 
+        })
+    }),
     getFriendsById: protectedProcedure
     .input(z.object({userId: z.string().uuid()}))
-    .query(({ctx, input}) => {
+    .query(({ ctx, input }) => {
         return ctx.prisma.user.findMany({
             where: {
                 OR: [{
