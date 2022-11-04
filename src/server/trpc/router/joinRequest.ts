@@ -22,11 +22,11 @@ export const joinRequestRouter = router({
         })
    }), 
    deleteJoinRequest: protectedProcedure
-   .input(z.object({eventId: z.string().uuid(), senderId: z.string().uuid()}))
+   .input(z.object({joinRequestId: z.string().uuid()}))
    .mutation(({ ctx, input }) => {
         return ctx.prisma.joinRequest.delete({
             where: {
-                eventId_senderId: input
+                id: input.joinRequestId
             }
         })
    })

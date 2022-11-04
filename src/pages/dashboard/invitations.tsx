@@ -15,12 +15,17 @@ const InvitationsPage: NextPage<IInvitationProps> = ({ sessionUser }) => {
 
     const { register, handleSubmit, formState: { errors } } = useForm<IFormInput>() 
     
-    const invitationIdRef = useRef<string | null>(null)
+    const invitationRef = useRef<Invitation | null>(null)
+    const modalRef = useRef<HTMLDialogElement | null>(null)
+
+    const openModal = (invitation: Invitation) => {
+        invitationRef.current = invitation
+        modalRef.current?.showModal()
+    }
 
     const onUpdateInvitation: SubmitHandler<IFormInput> = (input) => {
-        console.log(invitationIdRef.current)
-        if (invitationIdRef.current !== null) {
-            updateInvitation.mutate({invitationId: invitationIdRef.current, rsvp: input.rsvp})
+        if (invitationRef.current !== null) {
+            updateInvitation.mutate({invitationId: invitationRef.current?.id, rsvp: input.rsvp})
         }
     }
 
@@ -38,23 +43,15 @@ const InvitationsPage: NextPage<IInvitationProps> = ({ sessionUser }) => {
                 const invitation = event.invitations.find((invitation: Invitation) => 
                     invitation.recipientId === sessionUser.id
                 )
-                if (host !== undefined  && invitation !== undefined) {
+                if (host !== undefined && invitation !== undefined) {
                     return (
                         <div key={index}>
                             <h1>{event.name}</h1>
                             <ProfileImage image={host.image} size={40}/>
                             <p>{host.name}</p>
                             <p>{invitation.createdAt.toLocaleDateString()}</p>
-                            <div className="flex gap-5">
-                                <form onSubmit={handleSubmit(onUpdateInvitation)} >
-                                    <select defaultValue={invitation.rsvp}{...register("rsvp")}>
-                                        <option value="Going">Going</option>
-                                        <option value="Interested">Interested</option>
-                                        <option value="Not Going">Not Going</option>
-                                    </select>
-                                    <button onClick={() => invitationIdRef.current = invitation.id} type="submit">Update</button>
-                                </form>
-                            </div>
+                            <p>{invitation.rsvp}</p>
+                            <button onClick={() => openModal(invitation)}>Update</button>
                         </div>
                     )
                 }
@@ -68,6 +65,16 @@ const InvitationsPage: NextPage<IInvitationProps> = ({ sessionUser }) => {
                                 renderInvitations(event, index)
                             )
                        } 
+                       <dialog ref={modalRef}>
+                            <form onSubmit={handleSubmit(onUpdateInvitation)}>
+                                <select defaultValue={invitationRef.current?.rsvp ?? "Going"} {...register("rsvp")}>
+                                    <option value="Going">Going</option>
+                                    <option value="Interested">Interested</option>
+                                    <option value="Not Going">Not Going</option>
+                                </select>
+                                <button type="submit">Update</button>
+                            </form>
+                        </dialog>
                     </main>
                 </div>
             )
@@ -107,6 +114,6 @@ interface IInvitationProps {
 
 interface IFormInput {
     rsvp: string
- }
+}
 
 export default InvitationsPage

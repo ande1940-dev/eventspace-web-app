@@ -18,6 +18,26 @@ export const userRouter = router({
             }
         });
     }),
+    getCommentersByEvent: protectedProcedure
+    .input(z.object({eventId: z.string().uuid()}))
+    .query(({ctx, input}) =>{
+        return ctx.prisma.user.findMany({
+            where:  {
+                comments: {
+                    some: {
+                        eventId: input.eventId
+                    }
+                }
+            },
+            include: {
+                comments: {
+                    include: {
+                        children: true
+                    }
+                }
+            }
+        })
+    }),
     getUserById: protectedProcedure
     .input(z.object({userId: z.string().uuid()}))
     .query(({ ctx, input }) => {
@@ -42,6 +62,27 @@ export const userRouter = router({
             }
         })
     }), 
+    getHostByEvent: protectedProcedure
+    .input(z.object({eventId: z.string().uuid()}))
+    .query(({ctx, input}) => {
+        return ctx.prisma.user.findFirst({
+            where: {
+                hostedEvents: {
+                    some: {
+                        id: input.eventId
+                    }
+                }     
+            },
+            include: {
+                hostedEvents: {
+                    include: {
+                        invitations: true, 
+                        comments: true
+                    }
+                }
+            }
+        })
+    }),
     getHostsByInvitee: protectedProcedure
     .query(({ ctx }) => {
         return ctx.prisma.user.findMany({

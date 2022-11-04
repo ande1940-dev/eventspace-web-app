@@ -10,6 +10,7 @@ import ProfileImage from '@/components/ProfileImage';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
 //TODO: redirect to dashboard after delete
+//TODO: have DateTime on event for when to rsvp by
 const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser}) => {
   //Queries 
   const eventQuery = trpc.event.getEventById.useQuery(({ eventId }))
@@ -29,8 +30,8 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser}) => {
     const event = eventQuery.data
     const invitees = inviteesQuery.data
     const uninvitedFriends = unInvitedFriendsQuery.data
-    const onAcceptJoinRequest = (senderId: string) => {
-        deleteJoinRequest.mutate({ eventId, senderId })
+    const onAcceptJoinRequest = (joinRequestId: string, senderId: string) => {
+        deleteJoinRequest.mutate({ joinRequestId })
         createInvitation.mutate({ eventId, userId: senderId })
     }
     const onAddInvitees: SubmitHandler<IFormInput> = (input) => {
@@ -100,8 +101,8 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser}) => {
                   <div key={index}>
                       <p>{request.senderId}</p>
                       <div className='flex'>
-                        <button onClick={() => onAcceptJoinRequest(request.senderId)}>Accept</button>
-                        <button onClick={() => deleteJoinRequest.mutate({eventId, senderId: request.senderId})}>Decline</button>
+                        <button onClick={() => onAcceptJoinRequest(request.id, request.senderId)}>Accept</button>
+                        <button onClick={() => deleteJoinRequest.mutate({joinRequestId: request.id})}>Decline</button>
                       </div>
                   </div>
                 )

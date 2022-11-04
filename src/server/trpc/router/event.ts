@@ -25,7 +25,6 @@ export const eventRouter = router({
             }
         })
     }),
-
     //Mutations
     createEvent: protectedProcedure
     .input(z.object({name: z.string(), location: z.string(), date: z.date()}))

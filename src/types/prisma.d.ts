@@ -10,6 +10,24 @@ declare module "@prisma/client" {
     include: typeof eventInvitationInclude
   }>;
 
+  const eventAllInclude = Prisma.validator<Prisma.EventInclude>()({
+    invitations: true,
+    comments: true
+  });
+
+  export type EventWithRelations = Prisma.EventGetPayload<{
+    include: typeof eventAllInclude
+  }>;
+
+  const userCommentInclude = Prisma.validator<Prisma.UserInclude>()({
+    comment: true
+  });
+
+  export type UserWithComments = Prisma.UserGetPayload<{
+    include: typeof userCommentInclude
+  }>;
+
+  
   const userEventInclude = Prisma.validator<Prisma.UserInclude>()({
     hostedEvents: true
   });

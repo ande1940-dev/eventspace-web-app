@@ -110,7 +110,7 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
                 return (
                     <div key={index} className="flex gap-5">
                         {/* Link to localhost:3000/event/eventId <Link href={`/dashboard/event/${event.id}`}>{event.name}</Link> */}
-                        <p>{event.name}</p>
+                        <Link href={`/event/${event.id}`}>{event.name}</Link>
                         {invitation !== undefined &&
                             <Link href="/dashboard/invitations">View Invitation</Link>
                         }
