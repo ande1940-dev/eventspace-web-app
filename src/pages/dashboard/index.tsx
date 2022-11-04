@@ -27,8 +27,9 @@ const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
      * @param {{name: string}} input The data submitted from the event form
      */
     const onCreateEvent: SubmitHandler<IFormInput> = async (input) => {
-        const event = await createEvent.mutateAsync({name: input.name})
-        router.replace(`/event/${event.id}`)
+        const date = new Date(input.date)
+        const event = await createEvent.mutateAsync({name: input.name, location: input.location, date})
+        router.replace(`/dashboard/event/${event.id}`)
     }
 
     if (eventsQuery.isSuccess) {
@@ -37,7 +38,7 @@ const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
             return (
                 <>
                     <Header sessionUser={sessionUser}/>
-                    <nav>
+                    <nav className="flex gap-5">
                         <Link href="/explore">Explore</Link>
                         <Link href="/dashboard/friends">Friends</Link>
                         <Link href="/dashboard/invitations">Invitations</Link>
@@ -47,7 +48,7 @@ const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
                             {
                                 events.map((event: Event, index: number) =>
                                     <div key={index}>
-                                        <Link href={`dashboard/event/${event.id}`}>{event.name}</Link>
+                                        <Link href={`/dashboard/event/${event.id}`}>{event.name}</Link>
                                     </div>
                                 )
                             }
@@ -60,8 +61,16 @@ const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
                             </div>
                             <form onSubmit={handleSubmit(onCreateEvent)} className="grid">
                                 <label>
-                                    Name
+                                    Name:
                                     <input {...register("name")} type="text" placeholder="Name"/>
+                                </label>
+                                <label>
+                                    Location:
+                                    <input {...register("location")} type="text"/>
+                                </label>
+                                <label>
+                                    Date: 
+                                    <input  {...register("date")} type="datetime-local"/>
                                 </label>
                                 <button type="submit">Create</button>
                             </form>
@@ -105,7 +114,8 @@ interface IDashboardProps {
 
 interface IFormInput {
    name: string
-   //location: string 
+   location: string 
+   date: Date
 }
 
 export default Dashboard;

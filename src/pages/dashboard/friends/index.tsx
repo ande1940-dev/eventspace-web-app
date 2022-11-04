@@ -6,7 +6,8 @@ import { getServerAuthSession } from "@/server/common/get-server-auth-session";
 import { trpc } from "@/utils/trpc";
 
 import Header from "@/components/Header";
-import FriendList from "@/components/Lists/FriendList";
+import ProfileImage from "@/components/ProfileImage";
+import { Friendship, UserWithFriends } from "@prisma/client";
 
 const FriendsPage: NextPage<IFriendsProps> = ({sessionUser}) => {
     //Queries 
@@ -15,13 +16,39 @@ const FriendsPage: NextPage<IFriendsProps> = ({sessionUser}) => {
     if (friendsQuery.isSuccess) {
         const friends = friendsQuery.data
         if (friends) {
+            const renderFriend = (friend: UserWithFriends, index: number) => {
+                const friended: Friendship | undefined = friend.friended.find((friendship: Friendship) => 
+                    friendship.acceptedById == sessionUser.id 
+                )
+                const friendedBy: Friendship | undefined = friend.friendedBy.find((friendship: Friendship) => 
+                    friendship.initiatedById == sessionUser.id
+                )
+                 
+                return (
+                    <div key={index}>
+                        <ProfileImage image={friend.image} size={40}/>
+                        <Link href={`/profile/${friend.id}`}><a>{friend.name}</a></Link>
+                        {friended !== undefined && 
+                            <p>Friends since {friended.createdAt.toLocaleString('en-us',{month:'short', year:'numeric'})}</p>
+                        }
+                        {friendedBy !== undefined && 
+                            <p>Friend since {friendedBy.createdAt.toLocaleString('en-us',{month:'short', year:'numeric'})}</p>
+                        }
+                    </div>
+                )
+            }
+            
             return (
                 <div>
                     <Header sessionUser={sessionUser} />
                     <nav>
                         <Link href="/dashboard/friends/requests">Friend Requests</Link>
                     </nav>
-                    <FriendList friends={friends} />
+                    {
+                        friends.map((friend: UserWithFriends, index: number) =>
+                           renderFriend(friend, index) 
+                        )
+                    }
                 </div>
             )
         } else {

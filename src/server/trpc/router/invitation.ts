@@ -24,11 +24,50 @@ export const invitationRouter = router({
         return invitation
    }), 
    deleteInvitation: protectedProcedure
-   .input(z.object({eventId: z.string().uuid(), recipientId: z.string().uuid()}))
+   .input(z.object({invitationId: z.string().uuid()}))
    .mutation(({ ctx, input }) => {
         return ctx.prisma.invitation.delete({
             where: {
-                eventId_recipientId: input
+                id: input.invitationId
+            }
+        })
+   }),
+   deleteBlockedInvitations: protectedProcedure
+   .input(z.object({blockedId: z.string().uuid()}))
+   .mutation(({ctx, input}) => {
+        return ctx.prisma.invitation.deleteMany({
+            where: {
+                OR:
+                [
+                    {
+                        recipientId: input.blockedId, 
+                        AND: {
+                            event: {
+                                hostId: ctx.session.user.id
+                            }
+                        }
+                    },
+                    {
+                        recipientId: ctx.session.user.id, 
+                        AND: {
+                            event: {
+                                hostId: input.blockedId
+                            }
+                        }
+                    }
+                ]
+            }
+        })
+   }),
+   updateInvitation: protectedProcedure
+   .input(z.object({invitationId: z.string().uuid(), rsvp: z.string()}))
+   .mutation(({ctx, input}) => {
+        return ctx.prisma.invitation.update({
+            where: {
+                id: input.invitationId
+            }, 
+            data: {
+                rsvp: input.rsvp
             }
         })
    })

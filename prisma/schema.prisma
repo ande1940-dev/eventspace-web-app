@@ -39,14 +39,14 @@ model Block {
 }
 
 model Invitation {
+  id          String   @id @default(uuid())
   recipient   User     @relation(fields: [recipientId], references: [id], onDelete: Cascade)
   recipientId String
   event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId     String
   createdAt   DateTime @default(now())
+  rsvp        String?
   unread      Boolean  @default(true)
-
-  @@id([eventId, recipientId])
 }
 
 model Event {
@@ -54,6 +54,8 @@ model Event {
   name         String
   host         User          @relation(fields: [hostId], references: [id], onDelete: Cascade)
   hostId       String
+  location     String
+  date         DateTime
   invitations  Invitation[]
   joinRequests JoinRequest[]
 }
@@ -80,13 +82,12 @@ model Friendship {
 }
 
 model JoinRequest {
+  id        String   @id @default(uuid())
   sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
   senderId  String
   event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId   String
   createdAt DateTime @default(now())
-
-  @@id([eventId, senderId])
 }
 
 model Session {

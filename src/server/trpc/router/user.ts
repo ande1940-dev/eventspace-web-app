@@ -30,13 +30,19 @@ export const userRouter = router({
                 blockedBy: true,
                 friended: true,
                 friendedBy: true,
-                hostedEvents: true,
+                hostedEvents: {
+                    include: {
+                        invitations: true,
+                        joinRequests: true
+                    }
+                },
+                invitations: true,
                 receivedFriendRequests: true,
                 sentFriendRequests: true
             }
         })
     }), 
-    getHostsById: protectedProcedure
+    getHostsByInvitee: protectedProcedure
     .query(({ ctx }) => {
         return ctx.prisma.user.findMany({
             where: {
@@ -51,12 +57,18 @@ export const userRouter = router({
                 }       
             }, 
             include: {
-                invitations: true, 
-                friended: true, 
-                friendedBy: true,
-                sentFriendRequests: true,
-                hostedEvents: true,
-                receivedFriendRequests: true
+                hostedEvents: {
+                    where: {
+                        invitations: {
+                            some: {
+                                recipientId: ctx.session.user.id
+                            }
+                        }
+                    }, 
+                    include: {
+                        invitations: true
+                    }
+                }
             }
         })
     }),

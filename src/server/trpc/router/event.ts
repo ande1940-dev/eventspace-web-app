@@ -28,11 +28,13 @@ export const eventRouter = router({
 
     //Mutations
     createEvent: protectedProcedure
-    .input(z.object({name: z.string()}))
+    .input(z.object({name: z.string(), location: z.string(), date: z.date()}))
     .mutation(async ({ctx, input}) => {
         const event = await ctx.prisma.event.create({
             data: {
                 name: input.name,
+                location: input.location, 
+                date: input.date,
                 host: {
                     connect: {
                         id: ctx.session.user.id

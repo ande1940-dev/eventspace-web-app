@@ -42,14 +42,15 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser}) => {
         createInvitation.mutate({eventId, userId: input.invitees})
       }
     }
-    const renderInvitee = (recipientId: string, index: number) => {
-      const invitee = invitees.find((invitee: User) => invitee.id === recipientId)
+    const renderInvitee = (invitation: Invitation, index: number) => {
+      const invitee = invitees.find((invitee: User) => invitee.id === invitation.recipientId)
       if (invitee !== undefined) { 
         return (
           <div key={index}>
               <ProfileImage image={invitee.image} size={40}/>
               <p>{invitee?.name}</p>
-              <button onClick={() => deleteInvitation.mutate({eventId, recipientId})}>Delete</button>
+              <p>rsvp {invitation.rsvp ?? "Pending"}</p>
+              <button onClick={() => deleteInvitation.mutate({invitationId: invitation.id})}>Delete</button>
           </div>
         )
       }
@@ -67,7 +68,7 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser}) => {
               <h1>Invitations</h1>
               {
                 event.invitations.map((invitation: Invitation, index: number) => 
-                  renderInvitee(invitation.recipientId, index)
+                  renderInvitee(invitation, index)
                 )
               }
             </div>

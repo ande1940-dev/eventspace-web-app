@@ -6,11 +6,13 @@ import { trpc } from "@/utils/trpc";
 
 import Header from "@/components/Header";
 import ProfileImage from "@/components/ProfileImage";
-import { Block, Event, FriendRequest, Friendship } from "@prisma/client";
+import { Block, Event, EventWithInvitations, FriendRequest, Friendship, Invitation, JoinRequest } from "@prisma/client";
 import Link from "next/link";
 
 //TODO: If session user is already blocked show only block options
-//TODO: When session user is redirected to friend request page: either hash or use query to make sure they do directly to the correct request 
+//TODO: When session user is redirected to friend request or invitation or join request page: either hash or use query to make sure they do directly to the correct request
+//TODO: If blocked, remove invitations from events hosted by sessionUser and profileUser
+//TODO: IF already invited to event, view invitation, If already sent join request,  pending 
 const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
     // Queries 
     const userQuery = trpc.user.getUserById.useQuery({ userId })
@@ -97,6 +99,32 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
                 
             }
 
+            const renderEvent = (event: EventWithInvitations, index: number) => {
+                const invitation = event.invitations.find((invitation: Invitation) => 
+                    invitation.recipientId === sessionUser.id
+                )
+                const joinRequest = event.joinRequests.find((joinRequest: JoinRequest) => 
+                    joinRequest.senderId === sessionUser.id
+                )
+
+                return (
+                    <div key={index} className="flex gap-5">
+                        {/* Link to localhost:3000/event/eventId <Link href={`/dashboard/event/${event.id}`}>{event.name}</Link> */}
+                        <p>{event.name}</p>
+                        {invitation !== undefined &&
+                            <Link href="/dashboard/invitations">View Invitation</Link>
+                        }
+                        {joinRequest !== undefined && 
+                            <p>View Join Request</p>
+                            // {/* Link to join request where you can cancel request*/}
+                        }
+                        {joinRequest === undefined && invitation === undefined &&
+                            <button onClick={() => joinEvent.mutate({eventId: event.id})}>Join</button>
+                        }
+                    </div>
+                ) 
+            }
+
             return (
                <div>
                     <Header sessionUser={sessionUser}/>
@@ -115,10 +143,7 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
                         <div>
                             {
                                 user.hostedEvents.map((event: Event, index: number) =>
-                                    <div key={index}>
-                                        <Link href={`dashboard/event/${event.id}`}>{event.name}</Link>
-                                        <button onClick={() => joinEvent.mutate({eventId: event.id})}>Join</button>
-                                    </div>
+                                    renderEvent(event, index)
                                 )
                             }
                         </div>

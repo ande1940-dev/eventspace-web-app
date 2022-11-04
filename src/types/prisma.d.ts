@@ -1,17 +1,30 @@
-import { Friendship, User, Prisma, FriendRequest } from "@prisma/client"
+import { Event, FriendRequest, Friendship, Invitation, JoinRequest, User} from "@prisma/client"
 
 declare module "@prisma/client" {
-  export type UserWithRelations = {
-    id: string 
-    name: string | null 
-    email: string | null 
-    image: string | null
-    friended?: Friendship[]
-    friendedBy?: Friendship[]
-    hostedEvents?: Event[]
-    joinRequests?: JoinRequest[]
-    sentFriendRequests?: FriendRequest[]
-    receivedFriendRequests?: FriendRequest[]
-    invitations?: Invitation[]
-  }
+
+  const eventInvitationInclude = Prisma.validator<Prisma.EventInclude>()({
+    invitations: true
+  });
+
+  export type EventWithInvitations = Prisma.EventGetPayload<{
+    include: typeof eventInvitationInclude
+  }>;
+
+  const userEventInclude = Prisma.validator<Prisma.UserInclude>()({
+    hostedEvents: true
+  });
+
+  export type UserWithEvents = Prisma.UserGetPayload<{
+    include: typeof userEventInclude
+  }>;
+
+  const userFriendInclude = Prisma.validator<Prisma.UserInclude>()({
+    friended: true, 
+    friendBy: true
+  });
+
+  export type UserWithFriends = Prisma.UserGetPayload<{
+    include: typeof userFriendInclude
+  }>;
+
 }
