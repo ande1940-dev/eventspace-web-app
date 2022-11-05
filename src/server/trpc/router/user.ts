@@ -18,7 +18,7 @@ export const userRouter = router({
             }
         });
     }),
-    getCommentersByEvent: protectedProcedure
+    getAuthorsByEvent: protectedProcedure
     .input(z.object({eventId: z.string().uuid()}))
     .query(({ctx, input}) =>{
         return ctx.prisma.user.findMany({

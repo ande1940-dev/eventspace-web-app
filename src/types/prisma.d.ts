@@ -2,6 +2,14 @@ import { Event, FriendRequest, Friendship, Invitation, JoinRequest, User} from "
 
 declare module "@prisma/client" {
 
+  const commentChildrenInclude = Prisma.validator<Prisma.CommentInclude>()({
+    children: true
+  });
+
+  export type CommentWithChildren = Prisma.CommentGetPayload<{
+    include: typeof commentChildrenInclude
+  }>;
+
   const eventInvitationInclude = Prisma.validator<Prisma.EventInclude>()({
     invitations: true
   });

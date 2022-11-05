@@ -1,22 +1,22 @@
-import React, { useRef } from 'react'
+import React from 'react'
 import { GetServerSideProps, NextPage } from 'next';
 import { SessionUser } from "next-auth";
-import { useRouter } from 'next/router';
 import { getServerAuthSession } from "@/server/common/get-server-auth-session";
 import { trpc } from '@/utils/trpc';
 import Header from '@/components/Header';
-import { Comment, Event, EventWithRelations, Invitation, JoinRequest, User, UserWithComments } from '@prisma/client';
+import { Comment, EventWithRelations, User } from '@prisma/client';
 import ProfileImage from '@/components/ProfileImage';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { comment } from 'postcss';
+import Link from 'next/link';
 
 //TODO: redirect to dashboard after delete
 //TODO: have DateTime on event for when to rsvp by
 //TODO: have get directions button
+//TODO: if comment has no replies button says reply instead of view replies
 const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser }) => {
   //Queries 
   const hostQuery = trpc.user.getHostByEvent.useQuery({eventId})
-  const commentersQuery = trpc.user.getCommentersByEvent.useQuery({eventId}) 
+  const commentersQuery = trpc.user.getAuthorsByEvent.useQuery({eventId}) 
   // Mutation 
   const createComment = trpc.comment.createComment.useMutation()
   //createjoinrequest
@@ -45,10 +45,10 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser }) => {
                   <ProfileImage image={author.image} size={20}/>
                   <p>{author.name}</p>
                 </div>
-                <p>{comment.comment}</p>
+                <p>{comment.text}</p>
                 <div className='flex gap-5'>
                   <p>Created At {comment.updatedAt.toLocaleString('en-us',{month:'short', day: 'numeric', 'year': 'numeric'})}</p>
-                  <button>View Replies</button>
+                  <Link href={`/event/${eventId}/comment/${comment.id}`}>View Replies</Link>
                 </div>
               </div>
             )

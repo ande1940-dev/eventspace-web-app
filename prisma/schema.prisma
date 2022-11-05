@@ -42,7 +42,7 @@ model Comment {
   id        String    @id @default(uuid())
   author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId  String
-  text   String
+  text      String
   event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId   String
   parentId  String?

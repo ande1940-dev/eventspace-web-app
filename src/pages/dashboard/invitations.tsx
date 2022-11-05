@@ -6,6 +6,7 @@ import React, { useRef } from 'react'
 import { getServerAuthSession } from "@/server/common/get-server-auth-session";
 import ProfileImage from '@/components/ProfileImage';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import Link from 'next/link';
 
 const InvitationsPage: NextPage<IInvitationProps> = ({ sessionUser }) => {
     // Queries
@@ -46,7 +47,7 @@ const InvitationsPage: NextPage<IInvitationProps> = ({ sessionUser }) => {
                 if (host !== undefined && invitation !== undefined) {
                     return (
                         <div key={index}>
-                            <h1>{event.name}</h1>
+                            <Link href={`/event/${event.id}`}>{event.name}</Link>
                             <ProfileImage image={host.image} size={40}/>
                             <p>{host.name}</p>
                             <p>{invitation.createdAt.toLocaleDateString()}</p>
