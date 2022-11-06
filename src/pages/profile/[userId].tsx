@@ -18,6 +18,7 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
     const userQuery = trpc.user.getUserById.useQuery({ userId })
     // Mutations 
     const createFriendRequest = trpc.friendRequest.createFriendRequest.useMutation()
+    const createFriendRequestNotification = trpc.notification.createFriendRequestNotification.useMutation()
     const deleteFriendship = trpc.friendship.deleteFriendship.useMutation()
     const createBlock = trpc.block.createBlock.useMutation()
     const unblockUser = trpc.block.deleteBlock.useMutation()
@@ -36,6 +37,7 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
                     block.blockedById === sessionUser.id
             )
 
+            //Mutation Functions 
             const blockUser = () => {
                 if (friended !== undefined) {
                     deleteFriendship.mutate({acceptedById: sessionUser.id, initiatedById: userId})
@@ -45,7 +47,26 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
                 } 
                 createBlock.mutate({blockedId: userId})
             }
+            const sendFriendRequest = async () => {
+                const friendRequest = await createFriendRequest.mutateAsync({recipientId: userId})
+                const body = `${sessionUser.name} sent a friend request`
+                const redirect = "/dashboard/friends/requests"
+                createFriendRequestNotification.mutate({body, recipientId: friendRequest.recipientId, redirect})
+            }
 
+            // Render Functions 
+            const renderBlockOptions = () => {
+                if (block !== undefined){
+                    return (
+                        <button onClick={() => unblockUser.mutate({blockedId: userId, blockedById: sessionUser.id})}>Unblock</button>
+                    )
+                } else {
+                    return (
+                        <button onClick={blockUser}>Block</button>
+                    )
+                }
+                
+            }
             const renderFriendOptions = () => {
                 const receivedRequest: FriendRequest | undefined = user.sentFriendRequests.find((request: FriendRequest) => 
                     request.recipientId === sessionUser.id
@@ -53,19 +74,12 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
                 const sentRequest: FriendRequest | undefined = user.receivedFriendRequests.find((request: FriendRequest) => 
                     request.senderId === sessionUser.id
                 )
-                
+
                return (
                     <div className="flex gap-5">
-                         {friended !== undefined && 
+                         {friended !== undefined || friendedBy !== undefined && 
                             <button onClick={() => 
                                 deleteFriendship.mutate({acceptedById: sessionUser.id, initiatedById: userId})}
-                            >
-                                Unfriend
-                            </button>
-                        }
-                        {friendedBy !== undefined && 
-                            <button onClick={() => 
-                                deleteFriendship.mutate({acceptedById: userId, initiatedById: sessionUser.id})}
                             >
                                 Unfriend
                             </button>
@@ -80,25 +94,11 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
                             <button>Pending</button>
                         }
                         {friended === undefined && friendedBy === undefined && receivedRequest === undefined && sentRequest === undefined && block === undefined &&  
-                            <button onClick={async () => await createFriendRequest.mutateAsync({recipientId: userId})}>Add Friend</button>
+                            <button onClick={sendFriendRequest}>Add Friend</button>
                         }
                     </div>
                )
             }
-            
-            const renderBlockOptions = () => {
-                if (block !== undefined){
-                    return (
-                        <button onClick={() => unblockUser.mutate({blockedId: userId, blockedById: sessionUser.id})}>Unblock</button>
-                    )
-                } else {
-                    return (
-                        <button onClick={blockUser}>Block</button>
-                    )
-                }
-                
-            }
-
             const renderEvent = (event: EventWithInvitations, index: number) => {
                 const invitation = event.invitations.find((invitation: Invitation) => 
                     invitation.recipientId === sessionUser.id
@@ -109,7 +109,6 @@ const Profile: NextPage<IProfileProps> = ({ sessionUser, userId }) => {
 
                 return (
                     <div key={index} className="flex gap-5">
-                        {/* Link to localhost:3000/event/eventId <Link href={`/dashboard/event/${event.id}`}>{event.name}</Link> */}
                         <Link href={`/event/${event.id}`}>{event.name}</Link>
                         {invitation !== undefined &&
                             <Link href="/dashboard/invitations">View Invitation</Link>

@@ -1,7 +1,6 @@
 import type { NextPage } from "next";
 import { GetServerSideProps } from 'next';
-import { SessionUser } from "next-auth";
-import { ClientSafeProvider, getProviders, LiteralUnion, signIn, signOut, useSession } from "next-auth/react";
+import { ClientSafeProvider, getProviders, LiteralUnion, signIn } from "next-auth/react";
 import { BuiltInProviderType } from "next-auth/providers";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 

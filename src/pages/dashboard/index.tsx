@@ -18,7 +18,7 @@ const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
     const createEvent = trpc.event.createEvent.useMutation()
 
     const modalRef = useRef<HTMLDialogElement>(null)
-    const { register, handleSubmit, formState: { errors } } = useForm<IFormInput>()
+    const { register, handleSubmit } = useForm<IFormInput>()
     const router = useRouter()
 
     /**
@@ -27,8 +27,8 @@ const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
      * @param {{name: string}} input The data submitted from the event form
      */
     const onCreateEvent: SubmitHandler<IFormInput> = async (input) => {
-        const date = new Date(input.date)
-        const event = await createEvent.mutateAsync({name: input.name, location: input.location, date})
+        const startDate = new Date(input.date)
+        const event = await createEvent.mutateAsync({name: input.name, location: input.location, startDate})
         router.replace(`/dashboard/event/${event.id}`)
     }
 

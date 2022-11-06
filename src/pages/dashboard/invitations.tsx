@@ -1,7 +1,7 @@
 import { trpc } from '@/utils/trpc'
 import { GetServerSideProps, NextPage } from 'next';
 import { Event, EventWithInvitations, Invitation, UserWithEvents} from '@prisma/client'
-import { SessionUser, User } from 'next-auth'
+import { SessionUser } from 'next-auth'
 import React, { useRef } from 'react'
 import { getServerAuthSession } from "@/server/common/get-server-auth-session";
 import ProfileImage from '@/components/ProfileImage';
@@ -14,7 +14,7 @@ const InvitationsPage: NextPage<IInvitationProps> = ({ sessionUser }) => {
     // Mutations
     const updateInvitation = trpc.invitation.updateInvitation.useMutation()
 
-    const { register, handleSubmit, formState: { errors } } = useForm<IFormInput>() 
+    const { register, handleSubmit } = useForm<IFormInput>() 
     
     const invitationRef = useRef<Invitation | null>(null)
     const modalRef = useRef<HTMLDialogElement | null>(null)
@@ -26,7 +26,7 @@ const InvitationsPage: NextPage<IInvitationProps> = ({ sessionUser }) => {
 
     const onUpdateInvitation: SubmitHandler<IFormInput> = (input) => {
         if (invitationRef.current !== null) {
-            updateInvitation.mutate({invitationId: invitationRef.current?.id, rsvp: input.rsvp})
+            updateInvitation.mutate({eventId: invitationRef.current.eventId,  recipientId: invitationRef.current.recipientId, rsvp: input.rsvp})
         }
     }
 

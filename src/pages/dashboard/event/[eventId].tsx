@@ -1,7 +1,6 @@
 import React, { useRef } from 'react'
 import { GetServerSideProps, NextPage } from 'next';
 import { SessionUser } from "next-auth";
-import { useRouter } from 'next/router';
 import { getServerAuthSession } from "@/server/common/get-server-auth-session";
 import { trpc } from '@/utils/trpc';
 import Header from '@/components/Header';
@@ -22,7 +21,7 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser}) => {
   const deleteInvitation = trpc.invitation.deleteInvitation.useMutation()
   const deleteJoinRequest = trpc.joinRequest.deleteJoinRequest.useMutation()
   // Form 
-  const { register, handleSubmit, formState: { errors } } = useForm<IFormInput>()
+  const { register, handleSubmit } = useForm<IFormInput>()
   //Ref
   const modalRef = useRef<HTMLDialogElement>(null)
 
@@ -30,19 +29,14 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser}) => {
     const event = eventQuery.data
     const invitees = inviteesQuery.data
     const uninvitedFriends = unInvitedFriendsQuery.data
-    const onAcceptJoinRequest = (joinRequestId: string, senderId: string) => {
-        deleteJoinRequest.mutate({ joinRequestId })
-        createInvitation.mutate({ eventId, userId: senderId })
+
+    //Mutation Function
+    const onAcceptJoinRequest = (joinRequest: JoinRequest) => {
+        deleteJoinRequest.mutate({eventId: joinRequest.eventId, senderId: joinRequest.senderId })
+        createInvitation.mutate({eventId: joinRequest.eventId, recipientId: joinRequest.senderId})
     }
-    const onAddInvitees: SubmitHandler<IFormInput> = (input) => {
-      console.log(input.invitees)
-      if (Array.isArray(input.invitees)) {
-        input.invitees.forEach((inviteeId: string) => 
-        createInvitation.mutate({eventId, userId: inviteeId})
-      )} else {
-        createInvitation.mutate({eventId, userId: input.invitees})
-      }
-    }
+
+    //Render Function
     const renderInvitee = (invitation: Invitation, index: number) => {
       const invitee = invitees.find((invitee: User) => invitee.id === invitation.recipientId)
       if (invitee !== undefined) { 
@@ -51,9 +45,21 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser}) => {
               <ProfileImage image={invitee.image} size={40}/>
               <p>{invitee?.name}</p>
               <p>rsvp {invitation.rsvp ?? "Pending"}</p>
-              <button onClick={() => deleteInvitation.mutate({invitationId: invitation.id})}>Delete</button>
+              <button onClick={() => deleteInvitation.mutate({eventId: invitation.eventId, recipientId: invitation.recipientId})}>Delete</button>
           </div>
         )
+      }
+    }
+
+    //Submit Handler
+    const onAddInvitees: SubmitHandler<IFormInput> = (input) => {
+      console.log(input.invitees)
+      if (Array.isArray(input.invitees)) {
+        input.invitees.forEach((inviteeId: string) => 
+          createInvitation.mutate({eventId, recipientId: inviteeId})
+        )
+      } else {
+        createInvitation.mutate({eventId, recipientId: input.invitees})
       }
     }
 
@@ -101,8 +107,8 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser}) => {
                   <div key={index}>
                       <p>{request.senderId}</p>
                       <div className='flex'>
-                        <button onClick={() => onAcceptJoinRequest(request.id, request.senderId)}>Accept</button>
-                        <button onClick={() => deleteJoinRequest.mutate({joinRequestId: request.id})}>Decline</button>
+                        <button onClick={() => onAcceptJoinRequest(request)}>Accept</button>
+                        <button onClick={() => deleteJoinRequest.mutate({eventId: request.eventId, senderId: request.senderId})}>Decline</button>
                       </div>
                   </div>
                 )
@@ -112,6 +118,7 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser}) => {
         </div>
       )
     }
+
     return <h1>Error</h1>
   } else if (!eventQuery.isError && !inviteesQuery.isError && !unInvitedFriendsQuery.isError) {
     return <h1>Loading</h1>

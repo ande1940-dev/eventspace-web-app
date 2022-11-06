@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 const ProfileImage = ({ image, size }: IProfileImageProps) => {
-    if (image) {
+    if (image && image !== undefined) {
         return (
             <div>
                 <Image
@@ -10,6 +10,7 @@ const ProfileImage = ({ image, size }: IProfileImageProps) => {
                     width={size}
                     height={size}
                     quality={90}
+                    alt="Profile Image"
                 />
             </div>
         )
@@ -19,7 +20,7 @@ const ProfileImage = ({ image, size }: IProfileImageProps) => {
 }
 
 interface IProfileImageProps {
-    image: string | null
+    image: string | null | undefined
     size: number
 }
 export default ProfileImage

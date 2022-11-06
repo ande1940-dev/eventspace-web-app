@@ -4,7 +4,6 @@ import { SessionUser } from "next-auth";
 import { useRouter } from "next/router";
 import { useRef } from "react";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
-import { trpc } from "../utils/trpc";
 
 import Header from "../components/Header";
 

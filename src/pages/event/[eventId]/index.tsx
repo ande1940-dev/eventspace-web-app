@@ -13,6 +13,7 @@ import Link from 'next/link';
 //TODO: have DateTime on event for when to rsvp by
 //TODO: have get directions button
 //TODO: if comment has no replies button says reply instead of view replies
+//TODO: can't have join request and be a part of add invitee list
 const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser }) => {
   //Queries 
   const hostQuery = trpc.user.getHostByEvent.useQuery({eventId})
@@ -20,7 +21,7 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser }) => {
   // Mutation 
   const createComment = trpc.comment.createComment.useMutation()
   //createjoinrequest
-  const { register, handleSubmit, formState: { errors } } = useForm<IFormInput>() 
+  const { register, handleSubmit } = useForm<IFormInput>() 
 
   if (hostQuery.isSuccess) {
     const host = hostQuery.data
@@ -34,7 +35,7 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser }) => {
           comment.parentId === null
         )
         const onCreateComment: SubmitHandler<IFormInput> = (input) => {
-            createComment.mutate({eventId, authorId: sessionUser.id, text: input.text})
+            createComment.mutate({eventId, authorId: sessionUser.id, body: input.body})
         }
         const renderComment = (comment: Comment, index: number) => {
           const author = commenters.find((commenter: User) =>  commenter.id === comment.authorId)
@@ -45,7 +46,7 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser }) => {
                   <ProfileImage image={author.image} size={20}/>
                   <p>{author.name}</p>
                 </div>
-                <p>{comment.text}</p>
+                <p>{comment.body}</p>
                 <div className='flex gap-5'>
                   <p>Created At {comment.updatedAt.toLocaleString('en-us',{month:'short', day: 'numeric', 'year': 'numeric'})}</p>
                   <Link href={`/event/${eventId}/comment/${comment.id}`}>View Replies</Link>
@@ -61,7 +62,7 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser }) => {
             <main>
               <p>{event.name}</p>
               <p>{event.location}</p>
-              <p>{event.date.toLocaleString('en-us',{weekday: 'long', month:'short', day: 'numeric', 'year': 'numeric'})}</p>
+              <p>{event.startDate.toLocaleString('en-us',{weekday: 'long', month:'short', day: 'numeric', 'year': 'numeric'})}</p>
               <div className='flex gap-3'>
                 Hosted by
                 <div className="flex gap-2 items-end">
@@ -82,7 +83,7 @@ const EventPage: NextPage<IEventProps> = ({ eventId, sessionUser }) => {
                     } 
                   </div>
                   <form onSubmit={handleSubmit(onCreateComment)}>
-                      <textarea rows={1} cols={50} {...register("text")} placeholder="Add a comment..." style={{resize: "none"}}/>
+                      <textarea rows={1} cols={50} {...register("body")} placeholder="Add a comment..." style={{resize: "none"}}/>
                       <button type="submit">Submit</button>
                   </form>
                 </div>
@@ -137,7 +138,7 @@ interface IEventProps {
 }
 
 interface IFormInput {
-  text: string
+  body: string
 }
 
 

@@ -4,13 +4,13 @@ import { z } from "zod";
 export const friendshipRouter = router({
    // Mutations 
    createFriendship: protectedProcedure
-   .input(z.object({friendId: z.string().uuid()}))
+   .input(z.object({initiatedById: z.string().uuid()}))
    .mutation(async ({ctx, input}) => {
         const friendship = await ctx.prisma.friendship.create({
             data: {
                 initiatedBy: {
                     connect: {
-                        id: input.friendId
+                        id: input.initiatedById
                     }
                 },
                 acceptedBy: {

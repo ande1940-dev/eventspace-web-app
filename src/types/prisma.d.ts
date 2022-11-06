@@ -27,6 +27,18 @@ declare module "@prisma/client" {
     include: typeof eventAllInclude
   }>;
 
+  const notificationInclude = Prisma.validator<Prisma.NotificationInclude>()({
+    comment: true,
+    friendRequest: true,
+    friendship: true,
+    invitation: true,
+    joinRequest: true,
+  });
+
+  export type NotificationWithRelations = Prisma.NotificationGetPayload<{
+    include: typeof notificationInclude
+  }>;
+
   const userCommentInclude = Prisma.validator<Prisma.UserInclude>()({
     comment: true
   });
@@ -52,5 +64,13 @@ declare module "@prisma/client" {
   export type UserWithFriends = Prisma.UserGetPayload<{
     include: typeof userFriendInclude
   }>;
+  
 
+  const userRequestInclude = Prisma.validator<Prisma.UserInclude>()({
+    sentReceivedRequests: true
+  });
+
+  export type UserWithRequests = Prisma.UserGetPayload<{
+    include: typeof userRequestInclude
+  }>;
 }

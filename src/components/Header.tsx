@@ -1,85 +1,48 @@
 import { SessionUser } from 'next-auth'
 import { signOut } from "next-auth/react";
-import Image from "next/image";
 import Link from "next/link";
-import { Notification } from '@prisma/client';
 import React, { useState } from 'react'
 import { trpc } from '../utils/trpc';
+import { Notification } from '@prisma/client';
+import ProfileImage from './ProfileImage';
 
+//TODO: On Notification Click, Mark Notification Read For Friend Request, but delete for notifications not requiring actions
 const Header = ({ sessionUser }: IHeaderProps) => {
-    // const [isNotificationOpen, toggleNotifications] = useState(false)
-    // const [isSettingsOpen, toggleSettings] = useState(false)
-
-    // const query = trpc.user.getUserById.useQuery(sessionUserId)
-    // if (query.isLoading) {
-    //     //display loading screen
-    // }
-    // const renderNotifications = () => {
-    //     if(notifications.length > 0) {
-    //         return <div>
-    //                     {
-    //                         notifications.map((notification: Notification, index: number) => 
-    //                             <div>{notification.message}</div>
-    //                         )
-    //                     }
-    //                </div>
-    //     }
-    // }
-
-    return (
-        <header className="flex p-5 justify-end">
-            <div>
-                <div> 
-                    { sessionUser.image !== null && sessionUser.image !== undefined && 
-                        <Link href={`/dashboard`}>
-                        <a>
-                            <Image
-                                src={sessionUser.image}
-                                width={35}
-                                height={35}
-                                quality={90}
-                                className="rounded-full"
-                            />  
-                        </a>
-                        </Link>
-                    }
-                </div>
-                {sessionUser.name !== null && sessionUser.name !== undefined && 
-                    <p>{sessionUser.name}</p>
-                }
-                <button onClick={() => signOut()}>Sign Out</button>
-            </div>
-        </header>
-    )
-}
-
-interface IHeaderProps {
-    sessionUser: SessionUser
-
-}
-
-export default Header;
-
-
- {/* <div>
-                    <button onClick={() => toggleNotifications(!isNotificationOpen)}>
-                        {
-                            notifications.length > 0 ? 
-                            <span className="material-symbols-outlined">notifications_active</span>
-                            : <span className="material-symbols-outlined">notifications</span>
-                        }
-                    </button>
-                    {
-                        isNotificationOpen && 
+    const notificationsQuery = trpc.notification.getNotificationsByUser.useQuery()
+    const [isNotificationOpen, toggleNotifications] = useState(false)
+    if (notificationsQuery.isSuccess) {
+        const notifications = notificationsQuery.data
+        if (notifications) {
+            return (
+                <div className="flex gap-5 items-end">
+                    <Link href="/dashboard"><a><ProfileImage image={sessionUser.image} size={25}/></a></Link>
+                    {sessionUser.name !== null && sessionUser.name !== undefined && 
+                        <p>{sessionUser.name}</p>
+                    } 
+                    <button onClick={() => signOut()}>Sign Out</button>
+                    <button onClick={() => toggleNotifications(!isNotificationOpen)}>Notifications</button>
+                    {isNotificationOpen && 
                         <div>
-                            {notifications.length > 0 ? 
-                                {
-
-                                }
+                            {
+                                notifications.map((notification: Notification, index: number) => 
+                                    <Link href={notification.redirect} key={index}>{notification.body}</Link>
+                                )
                             }
                         </div>
                     }
                 </div>
-                <button onClick={() => toggleSettings(!isSettingsOpen)}>
-                    <span className="material-symbols-outlined filled">expand_more</span>
-                </button>  */}
+            )
+        }
+        return <h1>Error</h1>
+    } else if (notificationsQuery.isLoading) {
+        return <h1>Loading</h1>
+    } else {
+        return <h1>Error</h1>
+    }
+}
+
+interface IHeaderProps {
+    sessionUser: SessionUser
+}
+
+export default Header;

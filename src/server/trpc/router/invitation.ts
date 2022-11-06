@@ -1,16 +1,16 @@
-import { router, publicProcedure, protectedProcedure } from "../trpc";
+import { router, protectedProcedure } from "../trpc";
 import { z } from "zod";
 
 export const invitationRouter = router({
    // Mutations 
    createInvitation: protectedProcedure
-   .input(z.object({eventId: z.string().uuid(), userId: z.string().uuid()}))
+   .input(z.object({eventId: z.string().uuid(), recipientId: z.string().uuid()}))
    .mutation(async ({ctx, input}) => {
         const invitation = await ctx.prisma.invitation.create({
             data: {
                 recipient: {
                     connect: {
-                        id: input.userId
+                        id: input.recipientId
                     }
                 },
                 event: {
@@ -24,11 +24,11 @@ export const invitationRouter = router({
         return invitation
    }), 
    deleteInvitation: protectedProcedure
-   .input(z.object({invitationId: z.string().uuid()}))
+   .input(z.object({eventId: z.string().uuid(), recipientId: z.string().uuid()}))
    .mutation(({ ctx, input }) => {
         return ctx.prisma.invitation.delete({
             where: {
-                id: input.invitationId
+                eventId_recipientId: input
             }
         })
    }),
@@ -60,11 +60,11 @@ export const invitationRouter = router({
         })
    }),
    updateInvitation: protectedProcedure
-   .input(z.object({invitationId: z.string().uuid(), rsvp: z.string()}))
+   .input(z.object({eventId: z.string().uuid(), recipientId: z.string().uuid(), rsvp: z.string()}))
    .mutation(({ctx, input}) => {
         return ctx.prisma.invitation.update({
             where: {
-                id: input.invitationId
+                eventId_recipientId: {eventId: input.eventId, recipientId: input.recipientId}
             }, 
             data: {
                 rsvp: input.rsvp

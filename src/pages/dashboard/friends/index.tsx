@@ -16,6 +16,7 @@ const FriendsPage: NextPage<IFriendsProps> = ({sessionUser}) => {
     if (friendsQuery.isSuccess) {
         const friends = friendsQuery.data
         if (friends) {
+            //Render Functions
             const renderFriend = (friend: UserWithFriends, index: number) => {
                 const friended: Friendship | undefined = friend.friended.find((friendship: Friendship) => 
                     friendship.acceptedById == sessionUser.id 
@@ -51,6 +52,7 @@ const FriendsPage: NextPage<IFriendsProps> = ({sessionUser}) => {
                     }
                 </div>
             )
+
         } else {
             return <h1>Error</h1>
         }

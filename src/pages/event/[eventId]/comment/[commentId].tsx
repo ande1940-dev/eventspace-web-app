@@ -7,14 +7,15 @@ import { SessionUser } from 'next-auth'
 import React from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 
-const CommentPage: NextPage<ICommentPageProps> = ({ eventId, commentId, sessionUser }) => {
+// TODO: reset field after first submit so it cant be submitted twice
+const CommentPage: NextPage<ICommentProps> = ({ eventId, commentId, sessionUser }) => {
     //Queries
     const authorsQuery = trpc.user.getAuthorsByEvent.useQuery({ eventId })
     
     // Mutation 
     const createComment = trpc.comment.createComment.useMutation()
 
-    const { register, handleSubmit, formState: { errors } } = useForm<IFormInput>() 
+    const { register, handleSubmit } = useForm<IFormInput>() 
 
     if (authorsQuery.isSuccess) {
         const authors = authorsQuery.data
@@ -30,7 +31,7 @@ const CommentPage: NextPage<ICommentPageProps> = ({ eventId, commentId, sessionU
                 const updatedDelta = comment.createdAt.getTime() === comment.updatedAt.getTime() ? null : getTimeDelta(comment.updatedAt.getTime())
                 
                 const onCreateComment: SubmitHandler<IFormInput> = (input) => {
-                    createComment.mutate({eventId, authorId: sessionUser.id, parentId: comment.id, text: input.text})
+                    createComment.mutate({eventId, authorId: sessionUser.id, parentId: comment.id, body: input.body})
                 }
                 return (
                     <div key={index}>
@@ -44,10 +45,10 @@ const CommentPage: NextPage<ICommentPageProps> = ({ eventId, commentId, sessionU
                             <p>{createdDelta}</p>
                             {updatedDelta && <p>{updatedDelta}</p>}
                         </div>
-                        <p>{comment.text}</p>
+                        <p>{comment.body}</p>
                         {depth < 2 && 
                                 <form onSubmit={handleSubmit(onCreateComment)}>
-                                <textarea rows={5} cols={100} {...register("text")} placeholder="What are your thoughts?" style={{resize: "none"}}/>
+                                <textarea rows={5} cols={100} {...register("body")} placeholder="What are your thoughts?" style={{resize: "none"}}/>
                                 <button type="submit">Submit</button>
                             </form>
                         }
@@ -60,16 +61,17 @@ const CommentPage: NextPage<ICommentPageProps> = ({ eventId, commentId, sessionU
                 )
                   
             }
-            const parentComment = comments.find((comment: CommentWithChildren) => comment.id === commentId)
+            const rootComment = comments.find((comment: CommentWithChildren) => comment.id === commentId)
 
             return (
                 <div>
                     {
-                        renderComment(parentComment, 0, 0)
+                        renderComment(rootComment, 0, 0)
                     }   
                 </div>
             )
         }
+        return <h1>Error</h1>
 
     } else if (authorsQuery.isLoading) {
         return <h1>Loading</h1>
@@ -154,20 +156,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     } 
 }
   
-interface ICommentPageProps {
+interface ICommentProps {
     eventId: string
     commentId: string 
     sessionUser: SessionUser
 }
 
-interface ICommentProps{
-    author: UserWithComments
-    comment: CommentWithChildren,
-    depth: number
-}
-
 interface IFormInput {
-    text: string
+    body: string
 }
 
 export default CommentPage

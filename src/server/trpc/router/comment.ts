@@ -1,4 +1,4 @@
-import { router, publicProcedure, protectedProcedure } from "../trpc";
+import { router, protectedProcedure } from "../trpc";
 import { z } from "zod";
 
 export const commentsRouter = router({
@@ -14,7 +14,7 @@ export const commentsRouter = router({
     }),
     //Mutation
     createComment: protectedProcedure
-    .input(z.object({authorId: z.string().uuid(), eventId: z.string().uuid(), parentId: z.string().uuid().optional(), text: z.string() }))
+    .input(z.object({authorId: z.string().uuid(), eventId: z.string().uuid(), parentId: z.string().uuid().optional(), body: z.string() }))
     .mutation(({ctx, input}) => {
         if (input.parentId === undefined) {
             return ctx.prisma.comment.create({
@@ -29,7 +29,7 @@ export const commentsRouter = router({
                             id: input.eventId
                         }
                     },
-                    text: input.text
+                    body: input.body
                 }
             })
         } else {
@@ -50,7 +50,7 @@ export const commentsRouter = router({
                             id: input.parentId
                         }
                     },
-                    text: input.text
+                    body: input.body
                 }
             })
         }

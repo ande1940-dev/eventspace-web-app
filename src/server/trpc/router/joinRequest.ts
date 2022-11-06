@@ -1,4 +1,4 @@
-import { router, publicProcedure, protectedProcedure } from "../trpc";
+import { router, protectedProcedure } from "../trpc";
 import { z } from "zod";
 
 export const joinRequestRouter = router({
@@ -22,11 +22,11 @@ export const joinRequestRouter = router({
         })
    }), 
    deleteJoinRequest: protectedProcedure
-   .input(z.object({joinRequestId: z.string().uuid()}))
+   .input(z.object({eventId: z.string().uuid(), senderId: z.string().uuid()}))
    .mutation(({ ctx, input }) => {
         return ctx.prisma.joinRequest.delete({
             where: {
-                id: input.joinRequestId
+                eventId_senderId: input
             }
         })
    })

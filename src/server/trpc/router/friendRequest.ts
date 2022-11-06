@@ -1,6 +1,5 @@
-import { router, publicProcedure, protectedProcedure } from "../trpc";
+import { router, protectedProcedure } from "../trpc";
 import { z } from "zod";
-import { User } from "@prisma/client";
 
 
 export const friendRequestRouter = router({
@@ -24,11 +23,11 @@ export const friendRequestRouter = router({
         })
    }), 
    deleteFriendRequest: protectedProcedure
-   .input(z.object({friendRequestId: z.string().uuid()}))
+   .input(z.object({recipientId: z.string().uuid(), senderId: z.string().uuid()}))
    .mutation(({ ctx, input }) => {
         return ctx.prisma.friendRequest.delete({
             where: {
-                id: input.friendRequestId
+                recipientId_senderId: input
             }
         })
    })

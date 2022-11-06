@@ -1,6 +1,5 @@
 import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { z } from "zod";
-import { User } from "@prisma/client";
 
 export const userRouter = router({
     // Queries 
@@ -195,13 +194,12 @@ export const userRouter = router({
         })
     }),
     getSendersById: protectedProcedure
-    .input(z.object({userId: z.string().uuid()}))
-    .query(({ctx, input}) => {
+    .query(({ctx}) => {
         return ctx.prisma.user.findMany({
             where: {
                 sentFriendRequests: {
                     some: {
-                        recipientId: input.userId
+                        recipientId: ctx.session.user.id
                     }
                 }
             }, 

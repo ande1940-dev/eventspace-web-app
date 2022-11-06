@@ -1,4 +1,4 @@
-import { router, publicProcedure, protectedProcedure } from "../trpc";
+import { router, protectedProcedure } from "../trpc";
 import { z } from "zod";
 
 export const eventRouter = router({
@@ -27,13 +27,15 @@ export const eventRouter = router({
     }),
     //Mutations
     createEvent: protectedProcedure
-    .input(z.object({name: z.string(), location: z.string(), date: z.date()}))
+    .input(z.object({name: z.string(), location: z.string(), startDate: z.date()}))
     .mutation(async ({ctx, input}) => {
         const event = await ctx.prisma.event.create({
             data: {
                 name: input.name,
                 location: input.location, 
-                date: input.date,
+                startDate: input.startDate,
+                endDate: input.startDate,
+                deadline: input.startDate,
                 host: {
                     connect: {
                         id: ctx.session.user.id

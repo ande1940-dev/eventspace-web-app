@@ -1,20 +1,20 @@
 // src/server/trpc/router/_app.ts
 import { router } from "../trpc";
-import { exampleRouter } from "./example";
 import { authRouter } from "./auth";
 
 
+
+import { commentsRouter } from "./comment";
 import { blockRouter } from "./block";
 import { eventRouter } from "./event";
 import { friendRequestRouter } from "./friendRequest";
 import { friendshipRouter } from "./friendship";
-import { userRouter } from "./user"
 import { invitationRouter } from "./invitation";
 import { joinRequestRouter } from "./joinRequest";
-import { commentsRouter } from "./comment";
+import { notificationRouter } from "./notification";
+import { userRouter } from "./user"
 
 export const appRouter = router({
-  example: exampleRouter,
   auth: authRouter,
   block: blockRouter,
   comment: commentsRouter,
@@ -23,6 +23,7 @@ export const appRouter = router({
   friendship: friendshipRouter,
   invitation: invitationRouter,
   joinRequest: joinRequestRouter,
+  notification: notificationRouter,
   user: userRouter
 });
 

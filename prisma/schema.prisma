@@ -29,81 +29,158 @@ model Account {
 }
 
 model Block {
-  blocked     User     @relation("BlockedOnBlocks", fields: [blockedId], references: [id])
-  blockedId   String
-  blockedBy   User     @relation("BlockersOnBlocks", fields: [blockedById], references: [id])
+  blocked   User   @relation("BlockedOnBlocks", fields: [blockedId], references: [id])
+  blockedId String
+
+  blockedBy   User   @relation("BlockersOnBlocks", fields: [blockedById], references: [id])
   blockedById String
-  createdAt   DateTime @default(now())
+
+  createdAt DateTime @default(now())
 
   @@id([blockedId, blockedById])
 }
 
 model Comment {
-  id        String    @id @default(uuid())
-  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId  String
-  text      String
-  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId   String
-  parentId  String?
-  parent    Comment?  @relation("ParentChildren", fields: [parentId], references: [id])
-  children  Comment[] @relation("ParentChildren")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id        String   @id @default(uuid())
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author   User   @relation("AuthorsOnComments", fields: [authorId], references: [id], onDelete: Cascade)
+  authorId String
+
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId String
+
+  children Comment[] @relation("ParentChildren")
+
+  likedBy User[] @relation("LikesOnComments")
+
+  parent   Comment? @relation("ParentChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId String?
+
+  rootId String?
+
+  notification Notification?
 }
 
 model Invitation {
-  id          String   @id @default(uuid())
-  recipient   User     @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  rsvp      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId String
+
+  notification Notification?
+
+  recipient   User   @relation(fields: [recipientId], references: [id], onDelete: Cascade)
   recipientId String
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  rsvp        String?
-  unread      Boolean  @default(true)
+
+  @@id([eventId, recipientId])
 }
 
 model Event {
-  id           String        @id @default(uuid())
-  name         String
-  host         User          @relation(fields: [hostId], references: [id], onDelete: Cascade)
-  hostId       String
-  location     String
-  date         DateTime
-  invitations  Invitation[]
+  id        String   @id @default(uuid())
+  name      String
+  location  String
+  startTime DateTime
+  endTime   DateTime
+  deadline  DateTime
+  rsvp      String?
+  private   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comments Comment[]
+
+  host   User   @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  hostId String
+
+  invitations Invitation[]
+
   joinRequests JoinRequest[]
-  comments     Comment[]
+
+  Notification Notification?
 }
 
 model FriendRequest {
-  id          String   @id @default(uuid())
-  recipient   User     @relation("RecipientsOnFriendRequests", fields: [recipientId], references: [id], onDelete: Cascade)
+  recipient   User   @relation("RecipientsOnFriendRequests", fields: [recipientId], references: [id], onDelete: Cascade)
   recipientId String
-  sender      User     @relation("SendersOnFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
-  senderId    String
-  createdAt   DateTime @default(now())
-  unread      Boolean  @default(true)
+
+  sender   User   @relation("SendersOnFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId String
+
+  notification Notification?
+
+  createdAt DateTime @default(now())
+
+  @@id([recipientId, senderId])
 }
 
 model Friendship {
-  acceptedBy    User     @relation("AcceptorsOnFriendships", fields: [acceptedById], references: [id])
-  acceptedById  String
-  initiatedBy   User     @relation("InitiatorsOnFriendships", fields: [initiatedById], references: [id])
+  acceptedBy   User   @relation("AcceptorsOnFriendships", fields: [acceptedById], references: [id])
+  acceptedById String
+
+  initiatedBy   User   @relation("InitiatorsOnFriendships", fields: [initiatedById], references: [id])
   initiatedById String
-  createdAt     DateTime @default(now())
-  unread        Boolean  @default(true)
+
+  notification Notification?
+
+  createdAt DateTime @default(now())
 
   @@id([acceptedById, initiatedById])
 }
 
 model JoinRequest {
-  id        String   @id @default(uuid())
-  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  senderId  String
-  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId   String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId String
+
+  notification Notification?
+
+  sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  senderId String
+
   createdAt DateTime @default(now())
+
+  @@id([eventId, senderId])
+}
+
+model Notification {
+  id       String  @id @default(uuid())
+  body     String
+  redirect String
+  unread   Boolean @default(true)
+
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId String?  @unique
+
+  event   Event?  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId String? @unique
+
+  friendRequest  FriendRequest? @relation(fields: [fr_recipientId, fr_senderId], references: [recipientId, senderId], onDelete: Cascade)
+  fr_recipientId String?
+  fr_senderId    String?
+
+  friendship       Friendship? @relation(fields: [fs_acceptedById, fs_initiatedById], references: [acceptedById, initiatedById], onDelete: Cascade)
+  fs_acceptedById  String?
+  fs_initiatedById String?
+
+  invitation     Invitation? @relation(fields: [in_eventId, in_recipientId], references: [eventId, recipientId], onDelete: Cascade)
+  in_eventId     String?
+  in_recipientId String?
+
+  joinRequest JoinRequest? @relation(fields: [jr_eventId, jr_senderId], references: [eventId, senderId], onDelete: Cascade)
+  jr_eventId  String?
+  jr_senderId String?
+
+  recipient   User   @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  recipientId String
+
+  @@unique([fr_recipientId, fr_senderId])
+  @@unique([fs_acceptedById, fs_initiatedById])
+  @@unique([in_eventId, in_recipientId])
+  @@unique([jr_eventId, jr_senderId])
 }
 
 model Session {
@@ -115,23 +192,37 @@ model Session {
 }
 
 model User {
-  id                     String          @id @default(uuid())
-  name                   String?
-  email                  String?         @unique
-  emailVerified          DateTime?
-  image                  String?
-  accounts               Account[]
-  sessions               Session[]
-  blocked                Block[]         @relation("BlockersOnBlocks")
-  blockedBy              Block[]         @relation("BlockedOnBlocks")
-  comments               Comment[]
-  friended               Friendship[]    @relation("InitiatorsOnFriendships")
-  friendedBy             Friendship[]    @relation("AcceptorsOnFriendships")
-  hostedEvents           Event[]
-  invitations            Invitation[]
+  id            String    @id @default(uuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  private       Boolean   @default(false)
+
+  accounts Account[]
+
+  blocked   Block[] @relation("BlockersOnBlocks")
+  blockedBy Block[] @relation("BlockedOnBlocks")
+
+  comments Comment[] @relation("AuthorsOnComments")
+
+  friended   Friendship[] @relation("InitiatorsOnFriendships")
+  friendedBy Friendship[] @relation("AcceptorsOnFriendships")
+
+  hostedEvents Event[]
+
+  invitations Invitation[]
+
+  likedComments Comment[] @relation("LikesOnComments")
+
+  notifications Notification[]
+
   receivedFriendRequests FriendRequest[] @relation("RecipientsOnFriendRequests")
   sentFriendRequests     FriendRequest[] @relation("SendersOnFriendRequests")
-  sentJoinRequest        JoinRequest[]
+
+  sentJoinRequest JoinRequest[]
+
+  sessions Session[]
 }
 
 model VerificationToken {
