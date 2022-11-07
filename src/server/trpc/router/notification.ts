@@ -65,6 +65,22 @@ export const notificationRouter = router({
 
         return notification 
     }),
+    createEventNotification: protectedProcedure
+   .input(z.object({ 
+        data: z.array(z.object({
+            body: z.string(),
+            eventId: z.string().uuid(),
+            recipientId: z.string().uuid(),
+            redirect: z.string(),
+        }))
+    }))
+    .mutation(async ({ctx, input}) => {
+        const notification = await ctx.prisma.notification.createMany({
+           data: input.data
+        })
+
+        return notification 
+    }),
     deleteNotification: protectedProcedure
     .input(z.object({ notificationId: z.string().uuid()}))
     .mutation(async ({ ctx, input }) => {

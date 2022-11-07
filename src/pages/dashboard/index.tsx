@@ -5,36 +5,60 @@ import Link from "next/link";
 import { getServerAuthSession } from "@/server/common/get-server-auth-session";
 import Header from "@/components/Header";
 import { trpc } from "@/utils/trpc";
-import { Event } from "@prisma/client";
+import { Event, Friendship, User } from "@prisma/client";
 import { useRef } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useRouter } from "next/router";
 
 //TODO: Invalidate Queries
+//TODO: Send Notification To All Friends When You Make An Event 
 const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
     //Queries
-    const eventsQuery = trpc.event.getHostedEvents.useQuery({ userId: sessionUser.id})
+    const userQuery = trpc.user.getUserById.useQuery({ userId: sessionUser.id })
     //Mutations 
     const createEvent = trpc.event.createEvent.useMutation()
+    const createEventNotification = trpc.notification.createEventNotification.useMutation()
 
     const modalRef = useRef<HTMLDialogElement>(null)
     const { register, handleSubmit } = useForm<IFormInput>()
     const router = useRouter()
 
-    /**
-     * Uses mutation to create an event & redirects to the newly created event page
-     *
-     * @param {{name: string}} input The data submitted from the event form
-     */
-    const onCreateEvent: SubmitHandler<IFormInput> = async (input) => {
-        const startDate = new Date(input.date)
-        const event = await createEvent.mutateAsync({name: input.name, location: input.location, startDate})
-        router.replace(`/dashboard/event/${event.id}`)
-    }
 
-    if (eventsQuery.isSuccess) {
-        const events = eventsQuery.data
-        if (events) {
+    if (userQuery.isSuccess) {
+        const user = userQuery.data
+        if (user) {
+
+            /**
+            * Uses the createEvent mutation to create an event and redirects to the newly created event page 
+            * Uses the createEventNotification mutation to notify friends of the newly created event 
+            * @param {{name: string}} input The data submitted from the event form
+            */
+            const onCreateEvent: SubmitHandler<IFormInput> = async (input) => {
+                const startDate = new Date(input.startDate)
+                const endDate = new Date(input.endDate)
+                const event = await createEvent.mutateAsync({name: input.name, location: input.location, startDate, endDate})
+
+                const body = `${sessionUser.name} created an event: ${event.name}`
+                const redirect = `/event/${event.id}`
+                const friendedData = user.friended.map((friendship: Friendship) => {
+                    return {
+                        eventId: event.id,
+                        body: body,
+                        recipientId: friendship.acceptedById,
+                        redirect: redirect
+                    }
+                })
+                const friendedByData = user.friendedBy.map((friendship: Friendship) => {
+                    return {
+                        eventId: event.id,
+                        body: body,
+                        recipientId: friendship.initiatedById,
+                        redirect: redirect
+                    }
+                })
+                createEventNotification.mutate({data: friendedData.concat(friendedByData)})
+                router.replace(redirect)
+            }
             return (
                 <>
                     <Header sessionUser={sessionUser}/>
@@ -46,7 +70,7 @@ const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
                     <main>
                         <div>
                             {
-                                events.map((event: Event, index: number) =>
+                                user.hostedEvents.map((event: Event, index: number) =>
                                     <div key={index}>
                                         <Link href={`/dashboard/event/${event.id}`}>{event.name}</Link>
                                     </div>
@@ -69,10 +93,15 @@ const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
                                     <input {...register("location")} type="text"/>
                                 </label>
                                 <label>
-                                    Date: 
-                                    <input  {...register("date")} type="datetime-local"/>
+                                    Start Date: 
+                                    <input  {...register("startDate")} type="datetime-local"/>
                                 </label>
-                                <button type="submit">Create</button>
+                               
+                                <label>
+                                    End Date: 
+                                    <input  {...register("endDate")} type="datetime-local"/>
+                                </label>
+                                <button type="submit" className="outline outline-black">Create</button>
                             </form>
                         </dialog>
                     </main>
@@ -81,7 +110,7 @@ const Dashboard: NextPage<IDashboardProps> = ({ sessionUser }) => {
             )
         } 
         return <h1>Error</h1>
-    } else if (eventsQuery.isLoading || eventsQuery.isFetching) {
+    } else if (userQuery.isLoading || userQuery.isFetching) {
         return <h1>Loading</h1>
     } else {
         return <h1>Error</h1>
@@ -115,7 +144,8 @@ interface IDashboardProps {
 interface IFormInput {
    name: string
    location: string 
-   date: Date
+   startDate: Date
+   endDate: Date
 }
 
 export default Dashboard;
